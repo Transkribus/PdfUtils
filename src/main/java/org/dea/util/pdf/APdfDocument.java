@@ -5,8 +5,6 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.apache.log4j.Logger;
-
 import com.itextpdf.awt.geom.AffineTransform;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -25,7 +23,6 @@ import com.itextpdf.text.pdf.PdfWriter;
  *
  */
 public abstract class APdfDocument {
-	private static final Logger logger = Logger.getLogger(APdfDocument.class);
 	protected Document document;
 	protected final int marginLeft;
 	protected final int marginRight;
