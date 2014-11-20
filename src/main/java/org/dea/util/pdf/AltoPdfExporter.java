@@ -22,33 +22,27 @@ public class AltoPdfExporter extends Observable {
 	private static final String ALTO_DIR = "alto";
 	private static final String IMG_DIR = "OCRmaster";
 	
-	public static void main(String[] args) throws DocumentException, IOException {
-		
-		
+	public static void main(String[] args) {
 		if(args.length != 2){
 			usage();
 			return;
-		}
-		
+		}	
 		File dir = new File(args[0]);
 		if(!dir.exists()){
 			logger.error("Not an existing directory: " + args[0]);
 			usage();
 			return;
 		}
-		
 		File out = new File(args[1]);
 		
-		createPdf(dir, out);
-		
-		
+		try {
+			createPdf(dir, out);
+		} catch (DocumentException | IOException e) {
+			logger.error("Could not create PDF!", e);
+		}
 	}
 
 	public static void createPdf(File dir, File out) throws DocumentException, IOException {
-//		final String BASE = "/mnt/dea_scratch/TRP/Alto2PDF/BZN_18950103/";
-//		final String xmlPath = BASE + "alto/BZN_18950103_01.xml"; 
-//		final String imgPath = BASE + "OCRmaster/BZN_18950103_01.TIF";
-		
 		List<Pair<File, File>> files = findFiles(dir);
 		createPdf(files, out);
 	}
@@ -56,14 +50,11 @@ public class AltoPdfExporter extends Observable {
 	public static void createPdf(List<Pair<File, File>> files, File out) throws DocumentException, IOException {
 		long start = System.currentTimeMillis();
 		AltoPdfDocument pdf = new AltoPdfDocument(out);
-
 		for(Pair<File, File> e : files){
 			pdf.addPage(e.getLeft(), e.getRight(), true);
 		}
 		pdf.close();
-
 		long end = System.currentTimeMillis();
-		
 		logger.info(end-start + " ms");
 	}
 
@@ -87,7 +78,6 @@ public class AltoPdfExporter extends Observable {
 				return false;
 			}
 		});
-		
 		List<File> imgFiles = Arrays.asList(imgFilesArr);
 		Collections.sort(imgFiles);
 		
