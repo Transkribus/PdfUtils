@@ -17,7 +17,6 @@ import org.xml.sax.SAXException;
 import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
-import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 
@@ -38,28 +37,9 @@ public class AltoPdfDocument extends APdfDocument {
 	}
 
 	public void addPage(File imgFile, File altoFile, boolean addAdditionalPlainTextPage) throws IOException, DocumentException {
-		
-		//FIXME use this only on cropped (printspace) images!!
-		java.awt.Rectangle printspace = null;
-//		if(pc.getPage() != null && pc.getPage().getPrintSpace() != null){
-//			java.awt.Polygon psPoly = PageXmlUtils.buildPolygon(pc.getPage().getPrintSpace().getCoords());
-//			printspace = psPoly.getBounds();
-//		}
-
-		Image img = Image.getInstance(imgFile.getAbsolutePath());
-		int cutoffLeft=0;
-		int cutoffTop=0;
-		
-		if(printspace==null) {
-			setPageSize(img);
-		} else {
-			int width=(int)printspace.getWidth();
-			int height=(int)printspace.getHeight();
-			setPageSize(new Rectangle(width, height));
-			cutoffLeft=printspace.x;
-			cutoffTop=printspace.y;
-		}
-		
+		//add image
+		Image img = Image.getInstance(imgFile.getAbsolutePath());	
+		setPageSize(img);
 		document.newPage();
 		document.add(img);
 		
@@ -75,11 +55,11 @@ public class AltoPdfDocument extends APdfDocument {
 			e.printStackTrace();
 		}
 		
-		addText(alto, cutoffLeft, cutoffTop);
+		addText(alto, 0, 0);
 		
 		if(addAdditionalPlainTextPage){
 			document.newPage();		
-			addText(alto ,cutoffLeft,cutoffTop);
+			addText(alto, 0, 0);
 		}
 	}
 
