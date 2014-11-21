@@ -1,4 +1,4 @@
-package org.dea.util.pdf;
+package org.dea.util.pdf.alto;
 
 import java.io.File;
 import java.io.IOException;
@@ -8,6 +8,7 @@ import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
 import org.apache.log4j.Logger;
+import org.dea.util.pdf.APdfDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;

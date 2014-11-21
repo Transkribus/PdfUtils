@@ -1,4 +1,4 @@
-package org.dea.util.pdf;
+package org.dea.util.pdf.alto;
 
 import java.io.File;
 import java.io.FilenameFilter;
