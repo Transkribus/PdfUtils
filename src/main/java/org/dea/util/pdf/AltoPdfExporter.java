@@ -78,7 +78,7 @@ public class AltoPdfExporter extends Observable {
 				return false;
 			}
 		});
-		List<File> imgFiles = Arrays.asList(imgFilesArr);
+		List<File> imgFiles = new ArrayList<>(Arrays.asList(imgFilesArr));
 		Collections.sort(imgFiles);
 		
 		List<Pair<File, File>> files = new ArrayList<>(imgFiles.size());
