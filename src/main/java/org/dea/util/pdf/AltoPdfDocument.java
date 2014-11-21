@@ -22,8 +22,7 @@ import com.itextpdf.text.pdf.BaseFont;
 import com.itextpdf.text.pdf.PdfContentByte;
 
 /**
- * Wrapper class for building PDFs from TrpDocuments with Itext.
- * Based on FEP's PDF_Document
+ * Wrapper class for building PDFs from ALTO files with Itext.
  * @author philip
  *
  */
@@ -124,7 +123,7 @@ public class AltoPdfDocument extends APdfDocument {
 				Double baseLineMeanY = y + height*0.9;
 				
 				java.awt.Rectangle boundRect = new java.awt.Rectangle(x, y, width, height);
-				addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf);
+				super.addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf);
 			}
 		}
 		
