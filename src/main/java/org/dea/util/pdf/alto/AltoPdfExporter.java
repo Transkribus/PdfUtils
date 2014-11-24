@@ -1,11 +1,13 @@
 package org.dea.util.pdf.alto;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FilenameFilter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Observable;
 
@@ -21,7 +23,7 @@ public class AltoPdfExporter extends Observable {
 	private static final String IMG_DIR = "OCRmaster";
 	
 	public static void main(String[] args) {
-		if(args.length != 2){
+		if(args.length != 1){
 			usage();
 			return;
 		}	
@@ -31,12 +33,37 @@ public class AltoPdfExporter extends Observable {
 			usage();
 			return;
 		}
-		File out = new File(args[1]);
 		
-		try {
-			createPdf(dir, out);
-		} catch (DocumentException | IOException e) {
-			logger.error("Could not create PDF!", e);
+		List<File> docDirs = new LinkedList<>();
+		addDocDirs(dir, docDirs);
+		
+		for(File d : docDirs){
+			final String outFilePath = d.getAbsolutePath() + File.separator + d.getName() + ".pdf";
+			File out = new File(outFilePath);
+			logger.info("Creating PDF: " + d.getAbsolutePath() + " -> " + out.getName());
+//			try {
+//				createPdf(dir, out);
+//			} catch (DocumentException | IOException e) {
+//				logger.error("Could not create PDF!", e);
+//			}
+		}
+	}
+
+	private static void addDocDirs(File dir, List<File> docDirs) {
+		//if is leaf
+		File altoDir = new File(dir.getAbsolutePath() + File.separator + ALTO_DIR);
+		File imgDir = new File(dir.getAbsolutePath() + File.separator + IMG_DIR);
+		if(altoDir.exists() && imgDir.exists()){
+			docDirs.add(dir);
+		} else {
+			File[] dirs = dir.listFiles(new FileFilter(){
+				@Override
+				public boolean accept(File pathname) {
+					return pathname.isDirectory();
+				}});
+			for(File f : dirs){
+				addDocDirs(f, docDirs);
+			}
 		}
 	}
 
@@ -49,7 +76,28 @@ public class AltoPdfExporter extends Observable {
 		long start = System.currentTimeMillis();
 		AltoPdfDocument pdf = new AltoPdfDocument(out);
 		for(Pair<File, File> e : files){
+			
+			//if image is not jpeg...
+//			final String imgName = imgFile.getName();
+//			File tmp = null;
+//			Image img;
+//			if(imgName.endsWith("tiff") || imgName.endsWith("tif")
+//					|| imgName.endsWith("TIFF") || imgName.endsWith("TIF")){
+//				tmp = new File(imgFile.getParent() + File.separator 
+//						+ FileUtils.getFileNameWithoutExtension(imgFile) + "_tmp.jpeg");
+//				TiffToJpg(imgFile, tmp, 0.5f);
+//				img = Image.getInstance(tmp.getAbsolutePath());
+//			} else {
+//				img = Image.getInstance(imgFile.getAbsolutePath());
+//			}
+			
 			pdf.addPage(e.getLeft(), e.getRight(), true);
+//			
+//			if(tmp != null){
+//				tmp.delete();
+//			}
+			
+
 		}
 		pdf.close();
 		long end = System.currentTimeMillis();
@@ -92,7 +140,26 @@ public class AltoPdfExporter extends Observable {
 	}
 	
 	private static void usage() {
-		System.out.println("Use: java -jar jarFileName inputDir pdfFileName");
+		System.out.println("Use: java -jar jarFileName inputDir");
 		return;		
 	}
+	
+
+//	public static File TiffToJpg(File tiffFile, File out, final float quality) throws IOException {
+//		    SeekableStream s = new FileSeekableStream(tiffFile);
+//		    TIFFDecodeParam param = null;
+//		    ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
+//		    RenderedImage op = dec.decodeAsRenderedImage(0);
+//		    FileOutputStream fos = new FileOutputStream(out);
+//		    
+//		    JPEGEncodeParam params = new JPEGEncodeParam();
+//		    params.setQuality(quality);
+//		    
+//			ImageEncoder encoder = ImageCodec.createImageEncoder("jpeg", fos,
+//					params);
+//			encoder.encode(op);
+//		    
+//		    fos.close();
+//		    return out;
+//		  }
 }
