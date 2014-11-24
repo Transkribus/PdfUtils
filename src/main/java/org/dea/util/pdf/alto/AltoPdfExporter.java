@@ -41,11 +41,11 @@ public class AltoPdfExporter extends Observable {
 			final String outFilePath = d.getAbsolutePath() + File.separator + d.getName() + ".pdf";
 			File out = new File(outFilePath);
 			logger.info("Creating PDF: " + d.getAbsolutePath() + " -> " + out.getName());
-//			try {
-//				createPdf(dir, out);
-//			} catch (DocumentException | IOException e) {
-//				logger.error("Could not create PDF!", e);
-//			}
+			try {
+				createPdf(dir, out);
+			} catch (DocumentException | IOException e) {
+				logger.error("Could not create PDF!", e);
+			}
 		}
 	}
 
@@ -91,7 +91,7 @@ public class AltoPdfExporter extends Observable {
 //				img = Image.getInstance(imgFile.getAbsolutePath());
 //			}
 			
-			pdf.addPage(e.getLeft(), e.getRight(), true);
+			pdf.addPage(e.getLeft(), e.getRight(), false);
 //			
 //			if(tmp != null){
 //				tmp.delete();
