@@ -8,6 +8,15 @@
 	<organization>
 		<name>DEA</name>
 	</organization>
+	<repositories>
+		<!-- DEA Gulliver artifactory: -->
+		<repository>
+			<id>dea-gulliver</id>
+			<name>dea-gulliver-releases</name>
+			<url>http://dea-gulliver.uibk.ac.at:8888/artifactory/libs-release-local</url>
+		</repository>
+	</repositories>
+	
 	<dependencies>
 		<dependency>
 			<groupId>org.dea.util</groupId>
@@ -28,6 +37,24 @@
 			<groupId>org.apache.commons</groupId>
 			<artifactId>commons-lang3</artifactId>
 			<version>3.0</version>
+		</dependency>
+		<!-- JAI for Image IO: -->
+		<dependency>
+			<groupId>javax.media</groupId>
+			<artifactId>jai_codec</artifactId>
+			<version>1.1.3</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>javax.media</groupId>
+			<artifactId>jai_core</artifactId>
+			<version>1.1.3</version>
+		</dependency>
+	
+		<dependency>
+			<groupId>com.sun.media</groupId>
+			<artifactId>jai_imageio</artifactId>
+			<version>1.1</version>
 		</dependency>
 	</dependencies>
 	<build>
