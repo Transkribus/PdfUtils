@@ -37,9 +37,8 @@ public class AltoPdfDocument extends APdfDocument {
 		super(pdfFile, marginLeft, marginTop, marginBottom, marginRight);
 	}
 
-	public void addPage(File imgFile, File altoFile, boolean addAdditionalPlainTextPage) throws IOException, DocumentException {
+	public void addPage(Image img, File altoFile, boolean addAdditionalPlainTextPage) throws IOException, DocumentException {
 		//add image
-		Image img = Image.getInstance(imgFile.getAbsolutePath());
 		setPageSize(img);
 		document.newPage();
 		document.add(img);
