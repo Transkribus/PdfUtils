@@ -7,7 +7,8 @@ import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.parsers.ParserConfigurationException;
 
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.dea.util.pdf.APdfDocument;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -27,7 +28,7 @@ import com.itextpdf.text.pdf.PdfContentByte;
  *
  */
 public class AltoPdfDocument extends APdfDocument {
-	private static final Logger logger = Logger.getLogger(AltoPdfDocument.class);
+	private static final Logger logger = LoggerFactory.getLogger(AltoPdfDocument.class);
 	
 	public AltoPdfDocument(final File pdfFile) throws DocumentException, IOException {
 		this(pdfFile, 0, 0, 0, 0);
@@ -95,7 +96,7 @@ public class AltoPdfDocument extends APdfDocument {
 					height = Integer.parseInt(hStr);
 					width = Integer.parseInt(wStr);
 				} catch (NumberFormatException nfe){
-					logger.fatal("Could not parse int value!", nfe);
+					logger.error("Could not parse int value!", nfe);
 					continue;
 				}
 

@@ -18,16 +18,51 @@
 	</repositories>
 	
 	<dependencies>
+	    		<!-- FOR LOGGING:  -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+			<version>1.7.10</version>
+		</dependency>		
+		
+		 <!-- Next 2 are for log4j 1.2 logging with sl4j: -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>log4j</groupId> -->
+<!-- 			<artifactId>log4j</artifactId> -->
+<!-- 			<version>1.2.17</version> -->
+<!-- 		</dependency>		 -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.slf4j</groupId> -->
+<!-- 			<artifactId>slf4j-log4j12</artifactId> -->
+<!-- 			<version>1.7.10</version> -->
+<!-- 		</dependency>		 -->
+	
+		<!-- Next 2 are for logback logging via sl4j: -->
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-classic</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+		
+		<dependency>
+			<groupId>ch.qos.logback</groupId>
+			<artifactId>logback-core</artifactId>
+			<version>1.1.2</version>
+		</dependency>
+		
+		<!-- This is for supporting conditions in logback.xml: -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.codehaus.janino</groupId> -->
+<!-- 			<artifactId>janino</artifactId> -->
+<!-- 			<version>2.6.1</version> -->
+<!-- 		</dependency>		 -->
+		<!-- END FOR LOGGING  -->
+	    
 		<dependency>
 			<groupId>org.dea.util</groupId>
 			<artifactId>fileutils</artifactId>
 			<version>0.0.1</version>
 			</dependency>
-		<dependency>
-			<groupId>log4j</groupId>
-			<artifactId>log4j</artifactId>
-			<version>1.2.17</version>
-		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>

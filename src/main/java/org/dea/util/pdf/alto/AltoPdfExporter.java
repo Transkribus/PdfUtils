@@ -14,7 +14,8 @@ import java.util.List;
 import java.util.Observable;
 
 import org.apache.commons.lang3.tuple.Pair;
-import org.apache.log4j.Logger;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.dea.util.file.FileUtils;
 
 import com.itextpdf.text.DocumentException;
@@ -28,7 +29,7 @@ import com.sun.media.jai.codec.SeekableStream;
 import com.sun.media.jai.codec.TIFFDecodeParam;
 
 public class AltoPdfExporter extends Observable {
-	private static final Logger logger = Logger.getLogger(AltoPdfExporter.class);
+	private static final Logger logger = LoggerFactory.getLogger(AltoPdfExporter.class);
 	private static final String ALTO_DIR = "alto";
 	private static final String IMG_DIR = "OCRmaster";
 	private static final String PDF_DIR = "pdf";
