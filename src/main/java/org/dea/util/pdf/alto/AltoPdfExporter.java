@@ -16,7 +16,7 @@ import java.util.Observable;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.dea.util.file.FileUtils;
+import org.dea.util.file.DeaFileUtils;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -125,7 +125,7 @@ public class AltoPdfExporter extends Observable {
 			final String imgName = imgFile.getName();
 			if(isTif(imgName) && doCompressTif){
 				tmp = new File(imgFile.getParent() + File.separator 
-						+ FileUtils.getFileNameWithoutExtension(imgFile) + "_tmp.jpeg");
+						+ DeaFileUtils.getFileNameWithoutExtension(imgFile) + "_tmp.jpeg");
 				TiffToJpg(imgFile, tmp, JPEG_QUALITY);
 				img = Image.getInstance(tmp.getAbsolutePath());				
 			} else {			
@@ -136,7 +136,7 @@ public class AltoPdfExporter extends Observable {
 			
 
 			if(createSinglePagePdfs){
-				File singlePdfOut = new File(pdfDir + File.separator + FileUtils.getFileNameWithoutExtension(e.getRight())+".pdf");
+				File singlePdfOut = new File(pdfDir + File.separator + DeaFileUtils.getFileNameWithoutExtension(e.getRight())+".pdf");
 				createPdf(img, e.getRight(), singlePdfOut);
 			}
 			if(tmp != null){
@@ -185,7 +185,7 @@ public class AltoPdfExporter extends Observable {
 		
 		List<Pair<File, File>> files = new ArrayList<>(imgFiles.size());
 		for(File img : imgFiles){
-			final String name = FileUtils.getFileNameWithoutExtension(img);
+			final String name = DeaFileUtils.getFileNameWithoutExtension(img);
 			File xml = new File(altoDir.getAbsolutePath() + File.separator + name + XML_EXT);
 			if(!xml.exists()){
 				throw new IOException("No XML found for file " + img.getAbsolutePath() + " at " + altoDir.getAbsolutePath());
