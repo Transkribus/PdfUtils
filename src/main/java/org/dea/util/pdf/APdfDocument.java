@@ -5,6 +5,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
+import org.slf4j.LoggerFactory;
+
 import com.itextpdf.awt.geom.AffineTransform;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
@@ -23,6 +25,8 @@ import com.itextpdf.text.pdf.PdfWriter;
  *
  */
 public abstract class APdfDocument {
+	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(APdfDocument.class);
+	
 	protected Document document;
 	protected final int marginLeft;
 	protected final int marginRight;
@@ -31,6 +35,13 @@ public abstract class APdfDocument {
 	protected final File pdfFile;
 	protected PdfLayer ocrLayer;
 	protected PdfWriter writer;
+	
+	protected float scaleFactorX = 1.0f;
+	protected float scaleFactorY = 1.0f;
+	
+	float splittingX = 0.0f;
+	float splittingY = 0.0f;
+	
 	
 	
 	public APdfDocument(final File pdfFile) throws DocumentException, IOException {
@@ -50,6 +61,7 @@ public abstract class APdfDocument {
 			document = new Document();
 			writer = PdfWriter.getInstance(document, new FileOutputStream(this.pdfFile));
 			writer.setPdfVersion(PdfWriter.VERSION_1_7);
+			writer.setUserunit(1);
 			document.setMargins(marginRight, marginLeft, marginTop, marginBottom);
 			document.open();
 
@@ -91,17 +103,69 @@ public abstract class APdfDocument {
 		Chunk c = new Chunk(text);
 
 		AffineTransform transformation=new AffineTransform();
-		final double tx = boundRect.getMinX()-cutoffLeft+marginLeft;
-		final double ty = document.getPageSize().getHeight() - (baseLineMeanY-cutoffTop+marginTop);
+		final double tx = (boundRect.getMinX()-cutoffLeft+marginLeft)*scaleFactorX;
+		final double ty = (document.getPageSize().getHeight()) - (baseLineMeanY-cutoffTop+marginTop)*scaleFactorY;
 		transformation.setToTranslation(tx, ty);
 		
-		float scaling_x=(Double.valueOf((boundRect.getMaxX()-1)-boundRect.getMinX())).floatValue()/cb.getEffectiveStringWidth(text, true);
-		float scaling_y=1;			
+		float scaling_x=(Double.valueOf((boundRect.getMaxX()-1)-boundRect.getMinX())).floatValue()/cb.getEffectiveStringWidth(text, true)*scaleFactorX;
+		float scaling_y=scaleFactorY;			
 		transformation.scale(scaling_x, scaling_y);
 
 		cb.setTextMatrix(transformation);
 		cb.showText(c.getContent());
 		cb.endText();
+	}
+	
+	/**
+	 * @param boundRect The bounding Rectangle for this string
+	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
+	 * @param text the text content
+	 * @param cb 
+	 * @param cutoffLeft
+	 * @param cutoffTop
+	 * @param bf
+	 */
+	protected void addUniformString(java.awt.Rectangle boundRect, double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth) {
+
+		if(c_height <= 0.0){
+			c_height = 10.0;
+		}
+		
+
+		cb.beginText();
+		
+		cb.moveText(posX, posY);
+		cb.setFontAndSize(bf, (float) c_height);
+		cb.setHorizontalScaling(100);
+		
+		float effTextWidth = cb.getEffectiveStringWidth(text, false);
+		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+		
+		logger.debug("text " + text);
+		logger.debug("effTextWidth " + effTextWidth);
+		logger.debug("effPrintWidth " + effPrintWidth);
+		
+		if ( effTextWidth > effPrintWidth){
+			float tmp = effPrintWidth / effTextWidth;
+			cb.setHorizontalScaling(tmp*100);
+			logger.debug("width exceeds page width: scale with " + tmp);
+		}		
+
+		Chunk c = new Chunk(text);
+
+		AffineTransform transformation=new AffineTransform();
+		final double tx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
+		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		transformation.setToTranslation(tx, ty);
+		
+		float scaling_x=0.18f;
+		float scaling_y=0.18f;			
+		transformation.scale(scaleFactorX, scaleFactorY);
+
+		cb.setTextMatrix(transformation);
+		cb.showText(c.getContent());
+		cb.endText();
+
 	}
 
 //	private void addTocLinks(FEP_Document doc, FEP_Page page, int cutoffTop) {
@@ -244,7 +308,27 @@ public abstract class APdfDocument {
 	
 	protected void setPageSize(Image image)
 	{
-		document.setPageSize(new Rectangle(image.getPlainWidth()+marginRight+marginLeft, image.getPlainHeight()+marginTop+marginBottom));
+		float xSize;
+		float ySize;
+		
+		if (image.getDpiX() > 72f){
+			scaleFactorX = scaleFactorY = 72f / image.getDpiX();
+			xSize = (float) (image.getPlainWidth() / (image.getDpiX()))*72;
+			ySize = (float) (image.getPlainHeight() / (image.getDpiY())*72);
+		}
+		else{
+			scaleFactorX = scaleFactorY = 72f / 300;
+			xSize = (float) (image.getPlainWidth() / 300*72);
+			ySize = (float) (image.getPlainHeight() / 300*72);
+		}
+		
+		
+		splittingX = xSize/12;
+		splittingY = ySize/12;
+
+		//document.setPageSize(new Rectangle(image.getScaledWidth(), image.getScaledHeight()));
+		document.setPageSize(new Rectangle(xSize+marginRight+marginLeft, ySize+marginTop+marginBottom));
+		//document.setPageSize(new Rectangle(image.getPlainWidth()+marginRight+marginLeft, image.getPlainHeight()+marginTop+marginBottom));
 	}
 
 
