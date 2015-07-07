@@ -131,24 +131,49 @@ public abstract class APdfDocument {
 			c_height = 10.0;
 		}
 		
+		/*
+		 * TODO:
+		 * highlighting of words could be realized by drawing and filling a rectangle like in this example
+		 *                         ''//Store the current graphics state so that we can unwind it later
+                        cb.SaveState()
+                        ''//Set the fill color based on eve/odd
+                        cb.SetColorFill(If(I Mod 2 = 0, BaseColor.GREEN, BaseColor.BLUE))
+                        ''//Optional, set a border
+                        cb.SetColorStroke(BaseColor.BLACK)
+                        ''//Draw a rectangle. NOTE: I'm subtracting 5 from the y to account for padding
+                        cb.Rectangle(0, y - 5, Doc.PageSize.Width, 15)
+                        ''//Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
+                        cb.FillStroke()
+                        ''//Unwind the graphics state
+                        cb.RestoreState()
+
+                        ''//Flag to begin text
+                        cb.BeginText()
+                        ''//Set the font
+                        cb.SetFontAndSize(BF_Times, 6)
+                        ''//Write some text
+                        cb.ShowTextAligned(PdfContentByte.ALIGN_LEFT, TestArray(I), 0, y, 0)
+                        ''//Done writing text
+                        cb.EndText()
+		 */
 
 		cb.beginText();
 		
 		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
 		cb.setHorizontalScaling(100);
-		
+				
 		float effTextWidth = cb.getEffectiveStringWidth(text, false);
 		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
 		
 		logger.debug("text " + text);
-		logger.debug("effTextWidth " + effTextWidth);
-		logger.debug("effPrintWidth " + effPrintWidth);
+//		logger.debug("effTextWidth " + effTextWidth);
+//		logger.debug("effPrintWidth " + effPrintWidth);
 		
 		if ( effTextWidth > effPrintWidth){
 			float tmp = effPrintWidth / effTextWidth;
 			cb.setHorizontalScaling(tmp*100);
-			logger.debug("width exceeds page width: scale with " + tmp);
+			//logger.debug("width exceeds page width: scale with " + tmp);
 		}		
 
 		Chunk c = new Chunk(text);
@@ -321,7 +346,6 @@ public abstract class APdfDocument {
 			xSize = (float) (image.getPlainWidth() / 300*72);
 			ySize = (float) (image.getPlainHeight() / 300*72);
 		}
-		
 		
 		splittingX = xSize/12;
 		splittingY = ySize/12;
