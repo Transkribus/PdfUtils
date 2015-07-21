@@ -4,19 +4,36 @@ package org.dea.util.pdf;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map.Entry;
 
 import org.slf4j.LoggerFactory;
 
+import java.awt.Color;
+
 import com.itextpdf.awt.geom.AffineTransform;
+import com.itextpdf.awt.geom.Line2D;
+import com.itextpdf.awt.geom.Point2D;
+import com.itextpdf.text.BaseColor;
 import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
+import com.itextpdf.text.Element;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
+import com.itextpdf.text.Utilities;
 import com.itextpdf.text.pdf.BaseFont;
+import com.itextpdf.text.pdf.ColumnText;
+import com.itextpdf.text.pdf.PdfAction;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfLayer;
+import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
+
+
 
 /**
  * Abstract class for building PDFs with Itext.
@@ -27,6 +44,9 @@ import com.itextpdf.text.pdf.PdfWriter;
 public abstract class APdfDocument {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(APdfDocument.class);
 	
+	public final URL RESOURCE
+	= getClass().getResource("findTagname.js");
+	
 	protected Document document;
 	protected final int marginLeft;
 	protected final int marginRight;
@@ -34,6 +54,7 @@ public abstract class APdfDocument {
 	protected final int marginBottom;
 	protected final File pdfFile;
 	protected PdfLayer ocrLayer;
+	protected PdfLayer imgLayer;
 	protected PdfWriter writer;
 	
 	protected float scaleFactorX = 1.0f;
@@ -66,6 +87,7 @@ public abstract class APdfDocument {
 			document.open();
 
 			ocrLayer = new PdfLayer("OCR", writer);
+			imgLayer = new PdfLayer("Image", writer);
 	}
 	
 	public void close() {
@@ -97,8 +119,8 @@ public abstract class APdfDocument {
 		}
 		
 		cb.beginText();
-		cb.setHorizontalScaling(100);
-		cb.moveText(posX, posY);
+//		cb.setHorizontalScaling(100);
+//		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
 		Chunk c = new Chunk(text);
 
@@ -124,73 +146,251 @@ public abstract class APdfDocument {
 	 * @param cutoffLeft
 	 * @param cutoffTop
 	 * @param bf
+	 * @param color 
+	 * @throws IOException 
 	 */
-	protected void addUniformString(java.awt.Rectangle boundRect, double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth) {
+	protected void addUniformString(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color) throws IOException {
 
 		if(c_height <= 0.0){
 			c_height = 10.0;
 		}
 		
-		/*
-		 * TODO:
-		 * highlighting of words could be realized by drawing and filling a rectangle like in this example
-		 *                         ''//Store the current graphics state so that we can unwind it later
-                        cb.SaveState()
-                        ''//Set the fill color based on eve/odd
-                        cb.SetColorFill(If(I Mod 2 = 0, BaseColor.GREEN, BaseColor.BLUE))
-                        ''//Optional, set a border
-                        cb.SetColorStroke(BaseColor.BLACK)
-                        ''//Draw a rectangle. NOTE: I'm subtracting 5 from the y to account for padding
-                        cb.Rectangle(0, y - 5, Doc.PageSize.Width, 15)
-                        ''//Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
-                        cb.FillStroke()
-                        ''//Unwind the graphics state
-                        cb.RestoreState()
-
-                        ''//Flag to begin text
-                        cb.BeginText()
-                        ''//Set the font
-                        cb.SetFontAndSize(BF_Times, 6)
-                        ''//Write some text
-                        cb.ShowTextAligned(PdfContentByte.ALIGN_LEFT, TestArray(I), 0, y, 0)
-                        ''//Done writing text
-                        cb.EndText()
-		 */
-
 		cb.beginText();
-		
 		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
-		cb.setHorizontalScaling(100);
 				
 		float effTextWidth = cb.getEffectiveStringWidth(text, false);
+		
 		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+		
+		cb.endText();
 		
 		logger.debug("text " + text);
 //		logger.debug("effTextWidth " + effTextWidth);
 //		logger.debug("effPrintWidth " + effPrintWidth);
 		
+		float printwidth = effTextWidth;
+		
 		if ( effTextWidth > effPrintWidth){
-			float tmp = effPrintWidth / effTextWidth;
-			cb.setHorizontalScaling(tmp*100);
+			printwidth = effPrintWidth / effTextWidth;
+			cb.setHorizontalScaling(printwidth*100);
 			//logger.debug("width exceeds page width: scale with " + tmp);
-		}		
+		}	
 
 		Chunk c = new Chunk(text);
-
+		Phrase phrase;
+		
 		AffineTransform transformation=new AffineTransform();
 		final double tx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
 		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
 		transformation.setToTranslation(tx, ty);
+					
+		transformation.scale(scaleFactorX, scaleFactorY);		
 		
-		float scaling_x=0.18f;
-		float scaling_y=0.18f;			
-		transformation.scale(scaleFactorX, scaleFactorY);
+		if (color != null){
+			
+			float startX = (float) tx;
+			float startY = (float) ty;
+			
+//			float endX = (float) tx + printwidth*scaleFactorX;
+//			float endY = (float) ty;
+//			
+//			drawColorLine(cb, color, startX, startY, endX, endY);
+			
+			
+            cb.saveState();
+//            //Set the fill color based on eve/odd
+            Color currColor = Color.decode(color);
+            cb.setColorFill(new BaseColor(currColor.getRGB()));
+//            //Optional, set a border
+//            //cb.SetColorStroke(BaseColor.BLACK)
+//            //Draw a rectangle.
+            cb.rectangle(startX, startY, printwidth*scaleFactorX, (float) c_height*scaleFactorY);
+//            //Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
+            cb.fill();
+//            //Unwind the graphics state
+            cb.restoreState();
+		}
+		
 
+		cb.beginText();
+		cb.setHorizontalScaling(100);
 		cb.setTextMatrix(transformation);
-		cb.showText(c.getContent());
+		
+
+		if (searchAction){
+			logger.debug("find tagname: " + text);
+			
+			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", text), writer));
+			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
+			c.append(", ");
+			//c.append(new String(rs.getBytes("given_name"), "UTF-8"));
+		    phrase = new Phrase(c);
+		    writer.addJavaScript(Utilities.readFileToString(RESOURCE.getPath()));
+		        // Add this Chunk to every page
+		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) tx, (float) ty, 0);
+   
+		}
+		else{
+			cb.showText(c.getContent());
+		}
+
 		cb.endText();
 
+	}
+	
+	protected void highlightStringUnderImg(java.awt.Rectangle boundRect,
+			Double baseLineMeanY, String text, String tagText,
+			PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf,
+			float twelth, String color, float yShift) {
+		if(baseLineMeanY == null) {
+			//no baseline -> divide bounding rectangle height by three and expect the line to be in the upper two thirds
+			double oneThird = (boundRect.getMaxY() - boundRect.getMinY())/3;
+			baseLineMeanY = boundRect.getMaxY() - oneThird;
+		}
+		
+		double c_height = baseLineMeanY-boundRect.getMinY();
+		
+		if(c_height <= 0.0){
+			c_height = 10.0;
+		}
+			
+		cb.beginText();
+		cb.setHorizontalScaling(100);
+//		cb.moveText(posX, posY);
+		cb.setFontAndSize(bf, (float) c_height);
+		
+		final double tx = (boundRect.getMinX()-cutoffLeft+marginLeft)*scaleFactorX;
+		final double ty = (document.getPageSize().getHeight()) - (baseLineMeanY-cutoffTop+marginTop)*scaleFactorY;
+		float width = cb.getEffectiveStringWidth(text, true);
+		
+		float effTagTextStart = cb.getEffectiveStringWidth(text.substring(0, text.indexOf(tagText)), false);
+		
+		cb.endText();
+		
+		cb.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_STROKE);
+		
+		if (color != null){
+			
+			float startX = (float) tx;
+			float startY = (float) ty - yShift*scaleFactorY;
+			
+			float endX = (float) tx + width*scaleFactorX;
+			
+			drawColorLine(cb, color, startX, startY, endX, startY);
+
+		}
+		
+		cb.setTextRenderingMode(PdfContentByte.TEXT_RENDER_MODE_INVISIBLE);
+
+		
+	}
+	
+	protected void highlightAllTagsOnImg(List<java.util.Map.Entry<Line2D,String>> lines, PdfContentByte cb, int cutoffLeft, int cutoffTop ) {
+		
+		Iterator lineIterator = lines.iterator();
+		
+		while (lineIterator.hasNext()){
+			
+			Entry<Line2D,String> pair = (Entry<Line2D, String>) lineIterator.next();
+			Point2D p1 = pair.getKey().getP1();
+			Point2D p2 = pair.getKey().getP2();
+			String color = pair.getValue();
+			
+			final float p1x = (float) ((p1.getX()-cutoffLeft+marginLeft)*scaleFactorX);
+			final float p1y = (float) ((document.getPageSize().getHeight()) - (p1.getY()-cutoffTop+marginTop)*scaleFactorY);
+			
+			final float p2x = (float) ((p2.getX()-cutoffLeft+marginLeft)*scaleFactorX);
+			final float p2y = (float) ((document.getPageSize().getHeight()) - (p2.getY()-cutoffTop+marginTop)*scaleFactorY);
+						
+			if (color != null){
+				
+				drawColorLine(cb, color, p1x, p1y, p2x, p2y);
+	
+			}
+		
+
+		}
+
+		
+	}
+	
+	
+	protected void highlightUniformString(double c_height, float posX, float posY, final String lineText, final String tagText, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, String color, float yShift) throws IOException {
+
+		if(c_height <= 0.0){
+			c_height = 10.0;
+		}
+		
+		cb.beginText();
+		cb.moveText(posX, posY);
+		cb.setFontAndSize(bf, (float) c_height);
+				
+		float effTextLineWidth = cb.getEffectiveStringWidth(lineText, false);
+		float effTagTextWidth = cb.getEffectiveStringWidth(tagText, false);
+		
+		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+		
+		cb.endText();
+		
+//		logger.debug("text " + text);
+//		logger.debug("effTextWidth " + effTextWidth);
+//		logger.debug("effPrintWidth " + effPrintWidth);
+		
+		float printwidth = effTextLineWidth;
+		
+		float printwidthScale = 1;
+		
+		if ( effTextLineWidth > effPrintWidth){
+			printwidth = effPrintWidth / effTextLineWidth;
+			printwidthScale = printwidth;
+			cb.setHorizontalScaling(printwidth*100);
+			//logger.debug("width exceeds page width: scale with " + tmp);
+		}	
+		
+		float effTagTextStart = cb.getEffectiveStringWidth(lineText.substring(0, lineText.indexOf(tagText)), false);
+	
+		AffineTransform transformation=new AffineTransform();
+		final double tx = (posX-cutoffLeft+marginLeft+effTagTextStart)*scaleFactorX;
+		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		transformation.setToTranslation(tx, ty);
+					
+		transformation.scale(scaleFactorX, scaleFactorY);
+				
+		if (color != null){
+			
+			float startX = (float) tx;
+			float startY = (float) ty - yShift*scaleFactorY;
+			
+			float endX = (float) tx + effTagTextWidth*printwidthScale*scaleFactorX;
+			float endY = (float) ty - yShift*scaleFactorY;
+			
+			drawColorLine(cb, color, startX, startY, endX, endY);
+
+		}
+		
+	}
+
+private void drawColorLine(PdfContentByte cb, String color, float startX,
+			float startY, float endX, float endY) {
+	    cb.saveState();
+	    //Set the fill color based on eve/odd
+	    Color currColor = Color.decode(color);
+	    cb.setColorFill(new BaseColor(currColor.getRGB()));
+	    cb.setColorStroke(new BaseColor(currColor.getRGB()));
+	    
+	    cb.moveTo(startX, startY);
+	    cb.lineTo(endX, endY);
+	
+	    cb.stroke();
+	    //Optional, set a border
+	    //cb.SetColorStroke(BaseColor.BLACK)
+	    //Draw a rectangle. NOTE: I'm subtracting 5 from the y to account for padding
+	    //cb.rectangle((float) tx, (float) ty, effTagTextWidth*scaleFactorX, (float) c_height*scaleFactorY);
+	    //Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
+	    //cb.fill();
+	    //Unwind the graphics state
+	    cb.restoreState();	
 	}
 
 //	private void addTocLinks(FEP_Document doc, FEP_Page page, int cutoffTop) {
