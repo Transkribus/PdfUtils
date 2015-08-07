@@ -165,7 +165,7 @@ public abstract class APdfDocument {
 		
 		cb.endText();
 		
-		logger.debug("text " + text);
+//		logger.debug("text " + text);
 //		logger.debug("effTextWidth " + effTextWidth);
 //		logger.debug("effPrintWidth " + effPrintWidth);
 		
@@ -219,7 +219,7 @@ public abstract class APdfDocument {
 		
 
 		if (searchAction){
-			logger.debug("find tagname: " + text);
+			//logger.debug("find tagname: " + text);
 			
 			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", text), writer));
 			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
