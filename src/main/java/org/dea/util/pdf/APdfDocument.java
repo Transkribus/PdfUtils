@@ -45,7 +45,7 @@ public abstract class APdfDocument {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(APdfDocument.class);
 	
 	public final URL RESOURCE
-	= getClass().getResource("findTagname.js");
+	= getClass().getClassLoader().getResource("findTagname.js");
 	
 	protected Document document;
 	protected final int marginLeft;
@@ -226,6 +226,10 @@ public abstract class APdfDocument {
 			c.append(", ");
 			//c.append(new String(rs.getBytes("given_name"), "UTF-8"));
 		    phrase = new Phrase(c);
+
+		    //logger.debug("Resource Path: " + RESOURCE.getPath());
+
+
 		    writer.addJavaScript(Utilities.readFileToString(RESOURCE.getPath()));
 		        // Add this Chunk to every page
 		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) tx, (float) ty, 0);
