@@ -82,6 +82,9 @@ public abstract class APdfDocument {
 			document = new Document();
 			writer = PdfWriter.getInstance(document, new FileOutputStream(this.pdfFile));
 			writer.setPdfVersion(PdfWriter.VERSION_1_7);
+			
+			//to yield PDF/A
+			//writer.setPDFXConformance(PdfWriter.PDFX1A2001);
 			writer.setUserunit(1);
 			document.setMargins(marginRight, marginLeft, marginTop, marginBottom);
 			document.open();
@@ -218,7 +221,7 @@ public abstract class APdfDocument {
 		cb.setTextMatrix(transformation);
 		
 
-		if (searchAction){
+		if (searchAction && c != null){
 			//logger.debug("find tagname: " + text);
 			
 			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", text), writer));
@@ -545,6 +548,7 @@ private void drawColorLine(PdfContentByte cb, String color, float startX,
 			xSize = (float) (image.getPlainWidth() / (image.getDpiX()))*72;
 			ySize = (float) (image.getPlainHeight() / (image.getDpiY())*72);
 		}
+		//if dpi is unknown, assumption is 300 dpi
 		else{
 			scaleFactorX = scaleFactorY = 72f / 300;
 			xSize = (float) (image.getPlainWidth() / 300*72);
