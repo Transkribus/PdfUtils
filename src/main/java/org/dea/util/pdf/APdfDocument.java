@@ -30,6 +30,7 @@ import com.itextpdf.text.pdf.ColumnText;
 import com.itextpdf.text.pdf.PdfAction;
 import com.itextpdf.text.pdf.PdfContentByte;
 import com.itextpdf.text.pdf.PdfLayer;
+import com.itextpdf.text.pdf.PdfPCell;
 import com.itextpdf.text.pdf.PdfStamper;
 import com.itextpdf.text.pdf.PdfWriter;
 
@@ -56,6 +57,8 @@ public abstract class APdfDocument {
 	protected PdfLayer ocrLayer;
 	protected PdfLayer imgLayer;
 	protected PdfWriter writer;
+	
+	protected PdfPCell cell;
 	
 	protected float scaleFactorX = 1.0f;
 	protected float scaleFactorY = 1.0f;
@@ -151,9 +154,15 @@ public abstract class APdfDocument {
 	 * @param bf
 	 * @param color 
 	 * @throws IOException 
+	 * @throws DocumentException 
 	 */
-	protected void addUniformString(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color) throws IOException {
+	protected void addUniformString(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color) throws IOException, DocumentException {
 
+		/*
+		 * states that text gets read right to left
+		 */
+		boolean rtl = false;
+		
 		if(c_height <= 0.0){
 			c_height = 10.0;
 		}
@@ -162,16 +171,14 @@ public abstract class APdfDocument {
 		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
 				
-		float effTextWidth = cb.getEffectiveStringWidth(text, false);
-		
+		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
 		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
 		
 		cb.endText();
 		
-//		logger.debug("text " + text);
-//		logger.debug("effTextWidth " + effTextWidth);
-//		logger.debug("effPrintWidth " + effPrintWidth);
-		
+		cb.beginText();
+		cb.setFontAndSize(bf, (float) c_height);
+				
 		float printwidth = effTextWidth;
 		
 		if ( effTextWidth > effPrintWidth){
@@ -182,12 +189,21 @@ public abstract class APdfDocument {
 
 		Chunk c = new Chunk(text);
 		Phrase phrase;
-		
+
 		AffineTransform transformation=new AffineTransform();
-		final double tx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
-		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
-		transformation.setToTranslation(tx, ty);
-					
+		double tx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
+		double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		
+		//for right to left writing
+		if(rtl){
+			//evt. genauere Position der Textregion ermitteln
+			if ((posX+effTextWidth) > (twelfth*11*scaleFactorX)){
+				
+			}
+			tx = (document.getPageSize().getWidth() - (twelfth*scaleFactorX));
+		}
+		
+		transformation.setToTranslation(tx, ty);			
 		transformation.scale(scaleFactorX, scaleFactorY);		
 		
 		if (color != null){
@@ -216,10 +232,10 @@ public abstract class APdfDocument {
 		}
 		
 
-		cb.beginText();
+
 		cb.setHorizontalScaling(100);
 		cb.setTextMatrix(transformation);
-		
+				
 
 		if (searchAction && c != null){
 			//logger.debug("find tagname: " + text);
@@ -239,7 +255,15 @@ public abstract class APdfDocument {
    
 		}
 		else{
-			cb.showText(c.getContent());
+
+			if (rtl){
+				phrase = new Phrase(c);
+				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phrase, (float) tx, (float) ty, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
+			}
+			else{
+				cb.showText(c.getContent());
+			}
+
 		}
 
 		cb.endText();
