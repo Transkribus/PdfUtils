@@ -1,9 +1,12 @@
 package org.dea.util.pdf;
 
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.net.URL;
 import java.util.Iterator;
 import java.util.List;
@@ -45,8 +48,9 @@ import com.itextpdf.text.pdf.PdfWriter;
 public abstract class APdfDocument {
 	private static final org.slf4j.Logger logger = LoggerFactory.getLogger(APdfDocument.class);
 	
-	public final URL RESOURCE
-	= getClass().getClassLoader().getResource("findTagname.js");
+	//public final URL RESOURCE = this.getClass().getClassLoader().getResource("findTagname.js");
+	
+	
 	
 	protected Document document;
 	protected final int marginLeft;
@@ -259,8 +263,12 @@ public abstract class APdfDocument {
 
 		    //logger.debug("Resource Path: " + RESOURCE.getPath());
 
-		    writer.addJavaScript(Utilities.readFileToString(RESOURCE.getPath()));
+		    InputStream is= this.getClass().getClassLoader().getResourceAsStream("js/findTagname.js");
+		    String jsString = fromStream(is);
+		    
+		    //writer.addJavaScript(Utilities.readFileToString(javaScriptFile));
 		        // Add this Chunk to every page
+		    writer.addJavaScript(jsString);
 		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) tx, (float) ty, 0);
    
 		}
@@ -280,6 +288,19 @@ public abstract class APdfDocument {
 
 		cb.endText();
 
+	}
+	
+	public static String fromStream(InputStream in) throws IOException
+	{
+	    BufferedReader reader = new BufferedReader(new InputStreamReader(in));
+	    StringBuilder out = new StringBuilder();
+	    String newLine = System.getProperty("line.separator");
+	    String line;
+	    while ((line = reader.readLine()) != null) {
+	        out.append(line);
+	        out.append(newLine);
+	    }
+	    return out.toString();
 	}
 	
 	protected void highlightStringUnderImg(java.awt.Rectangle boundRect,
