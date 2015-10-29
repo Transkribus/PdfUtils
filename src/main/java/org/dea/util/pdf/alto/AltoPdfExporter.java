@@ -11,12 +11,11 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
-import java.util.Observable;
 
 import org.apache.commons.lang3.tuple.Pair;
+import org.dea.util.file.DeaFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.dea.util.file.DeaFileUtils;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Image;
@@ -28,7 +27,7 @@ import com.sun.media.jai.codec.JPEGEncodeParam;
 import com.sun.media.jai.codec.SeekableStream;
 import com.sun.media.jai.codec.TIFFDecodeParam;
 
-public class AltoPdfExporter extends Observable {
+public class AltoPdfExporter {
 	private static final Logger logger = LoggerFactory.getLogger(AltoPdfExporter.class);
 	private static final String ALTO_DIR = "alto";
 	private static final String IMG_DIR = "OCRmaster";
