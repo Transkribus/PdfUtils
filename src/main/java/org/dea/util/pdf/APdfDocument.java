@@ -24,6 +24,7 @@ import com.itextpdf.text.Chunk;
 import com.itextpdf.text.Document;
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
+import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
@@ -70,8 +71,12 @@ public abstract class APdfDocument {
 	float splittingX = 0.0f;
 	float splittingY = 0.0f;
 	
-	
-	
+	double currentLineTx;
+	double currentLineTy;
+	double currentRotation = 0;
+	float currentPrintWidth;
+	float currentPrintWidthScale = (float) 1.0;
+
 	public APdfDocument(final File pdfFile) throws DocumentException, IOException {
 		this(pdfFile, 0, 0, 0, 0);
 	}
@@ -120,8 +125,8 @@ public abstract class APdfDocument {
 			baseLineMeanY = boundRect.getMaxY() - oneThird;
 		}
 		
-		final float posX = Double.valueOf(boundRect.getMinX() - cutoffLeft+marginLeft).floatValue();
-		final float posY = document.getPageSize().getHeight() - (Double.valueOf(baseLineMeanY-cutoffTop+marginTop).floatValue());
+//		final float posX = Double.valueOf(boundRect.getMinX() - cutoffLeft+marginLeft).floatValue();
+//		final float posY = document.getPageSize().getHeight() - (Double.valueOf(baseLineMeanY-cutoffTop+marginTop).floatValue());
 		double c_height = baseLineMeanY-boundRect.getMinY();
 		
 		if(c_height <= 0.0){
@@ -160,42 +165,69 @@ public abstract class APdfDocument {
 	 * @throws IOException 
 	 * @throws DocumentException 
 	 */
-	protected void addUniformString(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
+	protected void addUniformString(double c_height, float posX, float posY, final Phrase textPhrase, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
 
 		/*
 		 * states that text gets read right to left
 		 */
-		boolean rtl = false;
+		currentRotation = rotation;
 		
 		if(c_height <= 0.0 || c_height > 300){
 			c_height = 10.0/scaleFactorY;
 		}
+		
+		//c_height = c_height/scaleFactorY;
 
-		logger.debug("text heigth " + c_height);
+//		logger.debug("text heigth " + c_height*scaleFactorY);
+//		logger.debug("posX " + posX);
+//		logger.debug("posY " + posY);
+		
 		cb.beginText();
-		cb.moveText(posX, posY);
-		cb.setFontAndSize(bf, (float) c_height);
-				
-		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
-		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
-		
-		
-		
-		cb.endText();
-				
-		float printwidth = effTextWidth;
-		
 		cb.setHorizontalScaling(100);
-		if ( effTextWidth > effPrintWidth && rotation == 0){
-			printwidth = effPrintWidth / effTextWidth;
-			cb.setHorizontalScaling(printwidth*100);
-			logger.debug("width exceeds page width: scale with " + printwidth*100);
-		}	
+		cb.moveText(posX, posY);
 
-		Chunk c = new Chunk(text);
-		Phrase phrase;
+		cb.setFontAndSize(bf, (float) c_height);
+						
+		float effTextWidth = cb.getEffectiveStringWidth(textPhrase.getContent(), false);	
+		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+
+		cb.endText();
+
+//		logger.debug("effTextWidth " + effTextWidth);
+//		logger.debug("effPrintWidth " + effPrintWidth);
+
 		
-		logger.debug("rotation " + rotation);
+		if ( effTextWidth > effPrintWidth && rotation == 0){
+			currentPrintWidthScale = effPrintWidth / effTextWidth;
+			//cb.setHorizontalScaling(currentPrintWidthScale*100);
+			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
+		}	
+		
+		Phrase phraseNew = new Phrase();
+		for (Chunk ch : textPhrase.getChunks()){
+			//ch.setHorizontalScaling(currentPrintWidthScale);
+			Chunk tmpChunk = new Chunk(ch.getContent());
+			//tmpChunk.setLineHeight((float) c_height*scaleFactorY);
+			tmpChunk.setAttributes(ch.getAttributes());
+			tmpChunk.setFont(new Font(ch.getFont().getBaseFont(), (float) c_height*scaleFactorY));
+			
+			
+			//if (ch.getAttributes() != null && ch.getAttributes().containsKey("UNDERLINE")){
+
+			tmpChunk.setHorizontalScaling(currentPrintWidthScale);
+			phraseNew.add(tmpChunk);
+		}
+		
+//		for (Entry<String, Object> entry : ct.getAttributes().entrySet()){
+//			logger.debug("entry key " + entry.getKey());
+//			logger.debug("entry value " + entry.getValue().toString());
+//		}
+		
+		currentPrintWidth = effTextWidth*currentPrintWidthScale;
+
+		Chunk c = new Chunk(textPhrase.getContent());
+				
+		//logger.debug("rotation " + rotation);
 		if (Math.abs(rotation) > 1.5){
 			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
@@ -203,24 +235,14 @@ public abstract class APdfDocument {
 		}
 
 		AffineTransform transformation=new AffineTransform();
-		double tx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
-		double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		currentLineTx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
+		currentLineTy = (document.getPageSize().getHeight()) - posY*scaleFactorY;
 		
-		//for right to left writing
-		if(rtl){
-			//evt. genauere Position der Textregion ermitteln
-			if ((posX+effTextWidth) > (twelfth*11*scaleFactorX)){
-				
-			}
-			tx = (document.getPageSize().getWidth() - (twelfth*scaleFactorX));
-		}
-		
-
 
 		if (color != null){
 			
-			float startX = (float) tx;
-			float startY = (float) ty;
+			float startX = (float) currentLineTx;
+			float startY = (float) currentLineTy;
 			
 //			float endX = (float) tx + printwidth*scaleFactorX;
 //			float endY = (float) ty;
@@ -235,7 +257,7 @@ public abstract class APdfDocument {
 //            //Optional, set a border
 //            //cb.SetColorStroke(BaseColor.BLACK)
 //            //Draw a rectangle.
-            cb.rectangle(startX, startY, printwidth*scaleFactorX, (float) c_height*scaleFactorY);
+            cb.rectangle(startX, startY, currentPrintWidth*scaleFactorX, (float) c_height*scaleFactorY);
 //            //Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
             cb.fill();
 //            //Unwind the graphics state
@@ -246,7 +268,163 @@ public abstract class APdfDocument {
 		cb.beginText();
 
 		
-		transformation.setToTranslation(tx, ty);
+		transformation.setToTranslation(currentLineTx, currentLineTy);
+		transformation.scale(scaleFactorX, scaleFactorY);
+		transformation.rotate(rotation);
+		
+		//cb.setTextMatrix(transformation);
+		cb.endText();
+		
+
+		if (searchAction && c != null){
+			logger.debug("find tagname: " + textPhrase.getContent());
+			
+			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", textPhrase.getContent()), writer));
+			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
+			c.append(", ");
+			//c.append(new String(rs.getBytes("given_name"), "UTF-8"));
+
+		    //logger.debug("Resource Path: " + RESOURCE.getPath());
+
+		    InputStream is= this.getClass().getClassLoader().getResourceAsStream("js/findTagname.js");
+		    String jsString = fromStream(is);
+		    
+		    //writer.addJavaScript(Utilities.readFileToString(javaScriptFile));
+		        // Add this Chunk to every page
+		    writer.addJavaScript(jsString);
+		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, 0);
+   
+		}
+		else{
+			//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
+			//cb.showText(c.getContent());
+			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, 0);
+
+		}
+
+		
+
+	}
+	
+	/**
+	 * @param boundRect The bounding Rectangle for this string
+	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
+	 * @param text the text content
+	 * @param cb 
+	 * @param cutoffLeft
+	 * @param cutoffTop
+	 * @param bf
+	 * @param color 
+	 * @throws IOException 
+	 * @throws DocumentException 
+	 */
+	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
+
+		/*
+		 * states that text gets read right to left
+		 */
+		boolean rtl = false;
+		currentRotation = rotation;
+		
+		if(c_height <= 0.0 || c_height > 300){
+			c_height = 10.0/scaleFactorY;
+		}
+
+		logger.debug("text heigth " + c_height);
+		cb.beginText();
+		cb.moveText(posX, posY);
+		
+		
+		cb.setFontAndSize(bf, (float) c_height);
+						
+		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
+		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+
+		cb.endText();
+		
+
+		cb.setHorizontalScaling(100);
+		if ( effTextWidth > effPrintWidth && rotation == 0){
+			currentPrintWidthScale = effPrintWidth / effTextWidth;
+			cb.setHorizontalScaling(currentPrintWidthScale*100);
+			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
+		}	
+		
+		currentPrintWidth = effTextWidth*currentPrintWidthScale;
+
+		Chunk c = new Chunk(text);
+		
+		/*
+		 *       document.open();
+
+			      Chunk underline = new Chunk("Underline. ");
+			      underline.setUnderline(0.1f, -2f); //0.1 thick, -2 y-location
+			      document.add(underline);
+			
+			      document.add(new Paragraph("   "));
+			
+			      Chunk strikethrough = new Chunk("Strikethrough.");
+			      strikethrough.setUnderline(0.1f, 3f); //0.1 thick, 2 y-location
+			      document.add(strikethrough);
+			
+			      document.close();
+		 */
+		
+		
+		Phrase phrase;
+		
+		logger.debug("rotation " + rotation);
+		if (Math.abs(rotation) > 1.5){
+			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
+				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
+			}
+		}
+
+		AffineTransform transformation=new AffineTransform();
+		currentLineTx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
+		currentLineTy = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		
+		//for right to left writing
+		if(rtl){
+			//evt. genauere Position der Textregion ermitteln
+			if ((posX+effTextWidth) > (twelfth*11*scaleFactorX)){
+				
+			}
+			currentLineTx = (document.getPageSize().getWidth() - (twelfth*scaleFactorX));
+		}
+		
+
+
+		if (color != null){
+			
+			float startX = (float) currentLineTx;
+			float startY = (float) currentLineTy;
+			
+//			float endX = (float) tx + printwidth*scaleFactorX;
+//			float endY = (float) ty;
+//			
+//			drawColorLine(cb, color, startX, startY, endX, endY);
+			
+			
+            cb.saveState();
+//            //Set the fill color based on eve/odd
+            Color currColor = Color.decode(color);
+            cb.setColorFill(new BaseColor(currColor.getRGB()));
+//            //Optional, set a border
+//            //cb.SetColorStroke(BaseColor.BLACK)
+//            //Draw a rectangle.
+            cb.rectangle(startX, startY, currentPrintWidth*scaleFactorX, (float) c_height*scaleFactorY);
+//            //Draw the rectangle with a border. NOTE: Use cb.Fill() to draw without the border
+            cb.fill();
+//            //Unwind the graphics state
+            cb.restoreState();
+		}
+		
+
+		cb.beginText();
+
+		
+		transformation.setToTranslation(currentLineTx, currentLineTy);
 		transformation.scale(scaleFactorX, scaleFactorY);
 		transformation.rotate(rotation);
 		
@@ -269,14 +447,14 @@ public abstract class APdfDocument {
 		    //writer.addJavaScript(Utilities.readFileToString(javaScriptFile));
 		        // Add this Chunk to every page
 		    writer.addJavaScript(jsString);
-		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) tx, (float) ty, 0);
+		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0);
    
 		}
 		else{
 
 			if (rtl){
 				phrase = new Phrase(c);
-				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phrase, (float) tx, (float) ty, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
+				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phrase, (float) currentLineTx, (float) currentLineTy, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
 			}
 			else{
 				
@@ -380,53 +558,63 @@ public abstract class APdfDocument {
 	}
 	
 	
-	protected void highlightUniformString(double c_height, float posX, float posY, final String lineText, final String tagText, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, String color, float yShift) throws IOException {
+	protected void highlightUniformTagString(double c_height, float posX, float posY, final String lineText, final String tagText, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, String color, float yShift, int offset) throws IOException {
 
-		if(c_height <= 0.0){
-			c_height = 10.0;
-		}
-		
+//		if(c_height <= 0.0){
+//			c_height = 10.0;
+//		}
+//		
 		cb.beginText();
 		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
-				
-		float effTextLineWidth = cb.getEffectiveStringWidth(lineText, false);
-		float effTagTextWidth = cb.getEffectiveStringWidth(tagText, false);
-		
-		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
-		
+//				
+//		float effTextLineWidth = cb.getEffectiveStringWidth(lineText, false);
+//		float effTagTextWidth = cb.getEffectiveStringWidth(tagText, false);
+//		
+//		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
+//		
 		cb.endText();
+//		
+////		logger.debug("text " + text);
+////		logger.debug("effTextWidth " + effTextWidth);
+		logger.debug("currentPrintWidthScale " + currentPrintWidthScale);
 		
-//		logger.debug("text " + text);
-//		logger.debug("effTextWidth " + effTextWidth);
-//		logger.debug("effPrintWidth " + effPrintWidth);
+//		float printwidth = effTextLineWidth;
+//		
+//		float printwidthScale = currentPrintwidth;
+//		
+//		if ( effTextLineWidth > effPrintWidth){
+//			printwidth = effPrintWidth / effTextLineWidth;
+//			printwidthScale = printwidth;
+//			cb.setHorizontalScaling(printwidth*100);
+//			//logger.debug("width exceeds page width: scale with " + tmp);
+//		}	
 		
-		float printwidth = effTextLineWidth;
+		cb.setHorizontalScaling(currentPrintWidthScale*100);
 		
-		float printwidthScale = 1;
-		
-		if ( effTextLineWidth > effPrintWidth){
-			printwidth = effPrintWidth / effTextLineWidth;
-			printwidthScale = printwidth;
-			cb.setHorizontalScaling(printwidth*100);
-			//logger.debug("width exceeds page width: scale with " + tmp);
-		}	
-		
-		float effTagTextStart = cb.getEffectiveStringWidth(lineText.substring(0, lineText.indexOf(tagText)), false);
+		float effTagTextWidth = cb.getEffectiveStringWidth(tagText, false);
+		float effTagTextStart = cb.getEffectiveStringWidth(lineText.substring(0, offset), false);
 	
-		AffineTransform transformation=new AffineTransform();
-		final double tx = (posX-cutoffLeft+marginLeft+effTagTextStart)*scaleFactorX;
-		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
-		transformation.setToTranslation(tx, ty);
-					
-		transformation.scale(scaleFactorX, scaleFactorY);
+//		AffineTransform transformation=new AffineTransform();
+//		final double tx = (posX-cutoffLeft+marginLeft+effTagTextStart)*scaleFactorX;
+//		final double ty = (document.getPageSize().getHeight()) - posY*scaleFactorY;
+		
+		final double tx = currentLineTx + effTagTextStart*scaleFactorX;
+		final double ty = currentLineTy;
+		
+		//transformation.setToTranslation(tx, ty);			
+//		//transformation.setToTranslation(currentLineTx, currentLineTy);
+//		transformation.scale(scaleFactorX, scaleFactorY);
+//		transformation.rotate(1.5);
+////		
+//		cb.setTextMatrix(transformation);
 				
 		if (color != null){
 			
-			float startX = (float) tx;
+			float startX = (float) tx*currentPrintWidthScale;
 			float startY = (float) ty - yShift*scaleFactorY;
 			
-			float endX = (float) tx + effTagTextWidth*printwidthScale*scaleFactorX;
+			float endX = startX + effTagTextWidth*scaleFactorX*currentPrintWidthScale;
 			float endY = (float) ty - yShift*scaleFactorY;
 			
 			drawColorLine(cb, color, startX, startY, endX, endY);
