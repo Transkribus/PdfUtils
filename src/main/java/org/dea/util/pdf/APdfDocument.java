@@ -67,10 +67,7 @@ public abstract class APdfDocument {
 	
 	protected float scaleFactorX = 1.0f;
 	protected float scaleFactorY = 1.0f;
-	
-	float splittingX = 0.0f;
-	float splittingY = 0.0f;
-	
+		
 	double currentLineTx;
 	double currentLineTy;
 	double currentRotation = 0;
@@ -118,8 +115,8 @@ public abstract class APdfDocument {
 	 * @param cutoffTop
 	 * @param bf
 	 */
-	protected void addString(java.awt.Rectangle boundRect, Double baseLineMeanY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf) {
-		if(baseLineMeanY == null) {
+	protected void addString(java.awt.Rectangle boundRect, Double baseLineMeanY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, double angle) {
+		if(baseLineMeanY == null || baseLineMeanY == 0) {
 			//no baseline -> divide bounding rectangle height by three and expect the line to be in the upper two thirds
 			double oneThird = (boundRect.getMaxY() - boundRect.getMinY())/3;
 			baseLineMeanY = boundRect.getMaxY() - oneThird;
@@ -147,6 +144,7 @@ public abstract class APdfDocument {
 		float scaling_x=(Double.valueOf((boundRect.getMaxX()-1)-boundRect.getMinX())).floatValue()/cb.getEffectiveStringWidth(text, true)*scaleFactorX;
 		float scaling_y=scaleFactorY;			
 		transformation.scale(scaling_x, scaling_y);
+		transformation.rotate(angle*0.0175);
 
 		cb.setTextMatrix(transformation);
 		cb.showText(c.getContent());
@@ -298,7 +296,8 @@ public abstract class APdfDocument {
 		else{
 			//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
 			//cb.showText(c.getContent());
-			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, 0);
+			//logger.debug("rotate: " + rotation );
+			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, (float) rotation);
 
 		}
 
@@ -800,12 +799,127 @@ private void drawColorLine(PdfContentByte cb, String color, float startX,
 			ySize = (float) (image.getPlainHeight() / 300*72);
 		}
 		
-		splittingX = xSize/12;
-		splittingY = ySize/12;
-
 		//document.setPageSize(new Rectangle(image.getScaledWidth(), image.getScaledHeight()));
 		document.setPageSize(new Rectangle(xSize+marginRight+marginLeft, ySize+marginTop+marginBottom));
 		//document.setPageSize(new Rectangle(image.getPlainWidth()+marginRight+marginLeft, image.getPlainHeight()+marginTop+marginBottom));
+	}
+	
+	protected void addTitleString(String text, float posY,
+			float leftGap, float overallLineMeanHeight, PdfContentByte cb, BaseFont bfArialBoldItalic) {
+		
+		logger.debug("overallLineMeanHeight: " + overallLineMeanHeight);
+		logger.debug("document.getPageSize().getHeight(): " + document.getPageSize().getHeight());
+		logger.debug("document.getPageSize().getWidth(): " + document.getPageSize().getWidth());
+		logger.debug("left Gap: " + leftGap);
+		logger.debug("text: " + text);
+
+		if(overallLineMeanHeight <= 0.0 || overallLineMeanHeight > 300){
+			overallLineMeanHeight = (float) (10.0/scaleFactorY);
+		}
+				
+		Phrase phrase = new Phrase(text, new Font (bfArialBoldItalic, overallLineMeanHeight*scaleFactorY));
+
+		//
+		/*
+		 * 
+		 * 
+		 *         Document document = new Document();
+        PdfWriter writer = PdfWriter.getInstance(document, new FileOutputStream(dest));
+        document.open();
+ 
+        // the direct content
+        PdfContentByte cb = writer.getDirectContent();
+        // the rectangle and the text we want to fit in the rectangle
+        Rectangle rect = new Rectangle(100, 150, 220, 200);
+        String text = "test";
+        // try to get max font size that fit in rectangle
+        BaseFont bf = BaseFont.createFont();
+        int textHeightInGlyphSpace = bf.getAscent(text) - bf.getDescent(text);
+        float fontSize = 1000f * rect.getHeight() / textHeightInGlyphSpace;
+        Phrase phrase = new Phrase("test", new Font(bf, fontSize));
+        ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, phrase,
+                // center horizontally
+                (rect.getLeft() + rect.getRight()) / 2,
+                // shift baseline based on descent
+                rect.getBottom() - bf.getDescentPoint(text, fontSize),
+                0);
+ 
+        // draw the rect
+        cb.saveState();
+        cb.setColorStroke(BaseColor.BLUE);
+        cb.rectangle(rect.getLeft(), rect.getBottom(), rect.getWidth(), rect.getHeight());
+        cb.stroke();
+        cb.restoreState();
+ 
+//        document.close();
+//		 */
+		currentLineTx = 0;//(leftGap+marginLeft)*scaleFactorX;
+		currentLineTy = document.getPageSize().getHeight() - posY*scaleFactorY;
+
+		currentLineTx = (leftGap == 0 ? document.getPageSize().getWidth()/2 : leftGap*scaleFactorY);
+//		
+//		cb.beginText();
+//		//cb.moveText((float)currentLineTx, (float)currentLineTy);
+//		cb.setFontAndSize(bfArialBoldItalic, overallLineMeanHeight);
+//		//cb.setTextMatrix((float) currentLineTx, (float) currentLineTy);
+//		
+////		AffineTransform transformation=new AffineTransform();
+////		transformation.setToTranslation(currentLineTx, currentLineTy);
+////		transformation.scale(scaleFactorX, scaleFactorY);
+////		cb.setTextMatrix(transformation);
+////		cb.transform(transformation);
+//		//cb.saveState();
+//		
+//		//
+//		
+//				
+//		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
+//		//float effTextWidth = bfArialBoldItalic.getWidthPoint(text, overallLineMeanHeight);
+//		float effPrintWidth = (float) (document.getPageSize().getWidth()-currentLineTx);
+//
+//		logger.debug("effTextWidth " + effTextWidth);
+//		logger.debug("effPrintWidth " + effPrintWidth);
+//		
+//		
+//		logger.debug("currentLineTx: " + currentLineTx);
+//		logger.debug("currentLineTy: " + currentLineTy);
+//		
+//		logger.debug("leftGap*scaleFactorX: " + leftGap*scaleFactorX);
+//		logger.debug("scaleFactorX: " + scaleFactorX);
+//
+//		//cb.setHorizontalScaling(100);
+//		if ( effTextWidth > effPrintWidth){
+//			currentPrintWidthScale = effPrintWidth / effTextWidth;
+//			//cb.setHorizontalScaling(currentPrintWidthScale);
+//			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
+//		}
+//		
+//		
+//		
+//		//cb.restoreState();
+//		
+//		Phrase phraseNew = new Phrase();
+//		for (Chunk ch : phrase.getChunks()){
+//			//ch.setHorizontalScaling(currentPrintWidthScale);
+//			Chunk tmpChunk = new Chunk(ch.getContent());
+//			//tmpChunk.setLineHeight((float) c_height*scaleFactorY);
+//			tmpChunk.setAttributes(ch.getAttributes());
+//			//if (ch.getAttributes() != null && ch.getAttributes().containsKey("UNDERLINE")){
+//
+//			tmpChunk.setHorizontalScaling(currentPrintWidthScale);
+//			phraseNew.add(tmpChunk);
+//		}
+
+		if (leftGap == 0){
+			//cb.showText(text);
+			//cb.showTextAligned(Element.ALIGN_CENTER, text, (float) currentLineTx, (float) currentLineTy, 0);
+			ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, phrase, (float) currentLineTx, (float) currentLineTy, 0);
+		}
+		else{
+			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0);
+		}
+
+		//cb.endText();
 	}
 
 

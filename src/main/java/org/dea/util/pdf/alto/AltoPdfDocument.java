@@ -42,6 +42,26 @@ public class AltoPdfDocument extends APdfDocument {
 		//add image
 		setPageSize(img);
 		document.newPage();
+		
+		float xSize;
+		float ySize;
+		
+		/*
+		 * calculate size of image with respect to Dpi of the image and the default points of PDF which is 72
+		 * PDF also uses the same basic measurement unit as PostScript: 72 points == 1 inch
+		 */
+		if (img.getDpiX() > 72f){
+			 xSize = (float) (img.getPlainWidth() / img.getDpiX()*72);
+			 ySize = (float) (img.getPlainHeight() / img.getDpiY()*72);
+		}
+		else{
+			xSize = (float) (img.getPlainWidth() / 300*72);
+			ySize = (float) (img.getPlainHeight() / 300*72);
+		}
+		
+		img.scaleAbsolute(xSize, ySize);
+		img.setAbsolutePosition(0, 0);
+		
 		document.add(img);
 		
 		//open alto xml
@@ -104,7 +124,7 @@ public class AltoPdfDocument extends APdfDocument {
 				Double baseLineMeanY = y + height*0.9;
 				
 				java.awt.Rectangle boundRect = new java.awt.Rectangle(x, y, width, height);
-				super.addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf);
+				super.addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf, 0);
 			}
 		}
 		

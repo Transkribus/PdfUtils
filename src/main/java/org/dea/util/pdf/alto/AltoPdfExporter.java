@@ -130,10 +130,11 @@ public class AltoPdfExporter {
 			} else {			
 				img = Image.getInstance(imgFile.getAbsolutePath());
 			}
-
-			pdf.addPage(img, e.getRight(), false);
 			
 
+					
+			pdf.addPage(img, e.getRight(), false);
+			
 			if(createSinglePagePdfs){
 				File singlePdfOut = new File(pdfDir + File.separator + DeaFileUtils.getFileNameWithoutExtension(e.getRight())+".pdf");
 				createPdf(img, e.getRight(), singlePdfOut);
