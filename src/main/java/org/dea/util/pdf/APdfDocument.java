@@ -169,6 +169,7 @@ public abstract class APdfDocument {
 		 * states that text gets read right to left
 		 */
 		currentRotation = rotation;
+		currentPrintWidthScale = 1;
 		
 		if(c_height <= 0.0 || c_height > 300){
 			c_height = 10.0/scaleFactorY;
@@ -191,7 +192,7 @@ public abstract class APdfDocument {
 
 		cb.endText();
 
-//		logger.debug("effTextWidth " + effTextWidth);
+		logger.debug("rotation " + rotation);
 //		logger.debug("effPrintWidth " + effPrintWidth);
 
 		
