@@ -26,6 +26,7 @@ import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.Element;
 import com.itextpdf.text.Font;
 import com.itextpdf.text.Image;
+import com.itextpdf.text.Paragraph;
 import com.itextpdf.text.Phrase;
 import com.itextpdf.text.Rectangle;
 import com.itextpdf.text.Utilities;
@@ -104,6 +105,11 @@ public abstract class APdfDocument {
 	
 	public void close() {
 		document.close();
+	}
+	
+	public int getPageNumber() {
+		logger.debug("page number " + writer.getPageNumber());
+		return writer.getPageNumber();
 	}
 
 	/**
@@ -192,7 +198,7 @@ public abstract class APdfDocument {
 
 		cb.endText();
 
-		logger.debug("rotation " + rotation);
+//		logger.debug("rotation " + rotation);
 //		logger.debug("effPrintWidth " + effPrintWidth);
 
 		
@@ -330,7 +336,7 @@ public abstract class APdfDocument {
 			c_height = 10.0/scaleFactorY;
 		}
 
-		logger.debug("text heigth " + c_height);
+		//logger.debug("text heigth " + c_height);
 		cb.beginText();
 		cb.moveText(posX, posY);
 		
@@ -373,7 +379,7 @@ public abstract class APdfDocument {
 		
 		Phrase phrase;
 		
-		logger.debug("rotation " + rotation);
+		//logger.debug("rotation " + rotation);
 		if (Math.abs(rotation) > 1.5){
 			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
@@ -418,6 +424,9 @@ public abstract class APdfDocument {
             cb.fill();
 //            //Unwind the graphics state
             cb.restoreState();
+		}
+		else{
+			logger.debug("Color is null");
 		}
 		
 
@@ -808,17 +817,20 @@ private void drawColorLine(PdfContentByte cb, String color, float startX,
 	protected void addTitleString(String text, float posY,
 			float leftGap, float overallLineMeanHeight, PdfContentByte cb, BaseFont bfArialBoldItalic) {
 		
-		logger.debug("overallLineMeanHeight: " + overallLineMeanHeight);
-		logger.debug("document.getPageSize().getHeight(): " + document.getPageSize().getHeight());
-		logger.debug("document.getPageSize().getWidth(): " + document.getPageSize().getWidth());
-		logger.debug("left Gap: " + leftGap);
-		logger.debug("text: " + text);
+//		logger.debug("overallLineMeanHeight: " + overallLineMeanHeight);
+//		logger.debug("document.getPageSize().getHeight(): " + document.getPageSize().getHeight());
+//		logger.debug("document.getPageSize().getWidth(): " + document.getPageSize().getWidth());
+//		logger.debug("left Gap: " + leftGap);
+//		logger.debug("text: " + text);
 
 		if(overallLineMeanHeight <= 0.0 || overallLineMeanHeight > 300){
 			overallLineMeanHeight = (float) (10.0/scaleFactorY);
 		}
 				
-		Phrase phrase = new Phrase(text, new Font (bfArialBoldItalic, overallLineMeanHeight*scaleFactorY));
+		//Phrase phrase = new Phrase(text, new Font (bfArialBoldItalic, overallLineMeanHeight*scaleFactorY));
+		Chunk chunk = new Chunk(text, new Font (bfArialBoldItalic, overallLineMeanHeight*scaleFactorY));
+		
+
 
 		//
 		/*
@@ -856,71 +868,42 @@ private void drawColorLine(PdfContentByte cb, String color, float startX,
 //		 */
 		currentLineTx = 0;//(leftGap+marginLeft)*scaleFactorX;
 		currentLineTy = document.getPageSize().getHeight() - posY*scaleFactorY;
-
+		
 		currentLineTx = (leftGap == 0 ? document.getPageSize().getWidth()/2 : leftGap*scaleFactorY);
-//		
-//		cb.beginText();
-//		//cb.moveText((float)currentLineTx, (float)currentLineTy);
-//		cb.setFontAndSize(bfArialBoldItalic, overallLineMeanHeight);
-//		//cb.setTextMatrix((float) currentLineTx, (float) currentLineTy);
-//		
-////		AffineTransform transformation=new AffineTransform();
-////		transformation.setToTranslation(currentLineTx, currentLineTy);
-////		transformation.scale(scaleFactorX, scaleFactorY);
-////		cb.setTextMatrix(transformation);
-////		cb.transform(transformation);
-//		//cb.saveState();
-//		
-//		//
-//		
-//				
-//		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
-//		//float effTextWidth = bfArialBoldItalic.getWidthPoint(text, overallLineMeanHeight);
-//		float effPrintWidth = (float) (document.getPageSize().getWidth()-currentLineTx);
-//
-//		logger.debug("effTextWidth " + effTextWidth);
-//		logger.debug("effPrintWidth " + effPrintWidth);
-//		
-//		
-//		logger.debug("currentLineTx: " + currentLineTx);
-//		logger.debug("currentLineTy: " + currentLineTy);
-//		
-//		logger.debug("leftGap*scaleFactorX: " + leftGap*scaleFactorX);
-//		logger.debug("scaleFactorX: " + scaleFactorX);
-//
-//		//cb.setHorizontalScaling(100);
-//		if ( effTextWidth > effPrintWidth){
-//			currentPrintWidthScale = effPrintWidth / effTextWidth;
-//			//cb.setHorizontalScaling(currentPrintWidthScale);
-//			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
-//		}
-//		
-//		
-//		
-//		//cb.restoreState();
-//		
-//		Phrase phraseNew = new Phrase();
-//		for (Chunk ch : phrase.getChunks()){
-//			//ch.setHorizontalScaling(currentPrintWidthScale);
-//			Chunk tmpChunk = new Chunk(ch.getContent());
-//			//tmpChunk.setLineHeight((float) c_height*scaleFactorY);
-//			tmpChunk.setAttributes(ch.getAttributes());
-//			//if (ch.getAttributes() != null && ch.getAttributes().containsKey("UNDERLINE")){
-//
-//			tmpChunk.setHorizontalScaling(currentPrintWidthScale);
-//			phraseNew.add(tmpChunk);
-//		}
+		
+        Paragraph paragraph = new Paragraph();
 
-		if (leftGap == 0){
-			//cb.showText(text);
-			//cb.showTextAligned(Element.ALIGN_CENTER, text, (float) currentLineTx, (float) currentLineTy, 0);
-			ColumnText.showTextAligned(cb, Element.ALIGN_CENTER, phrase, (float) currentLineTx, (float) currentLineTy, 0);
+        paragraph.setSpacingBefore(overallLineMeanHeight*scaleFactorY);
+        paragraph.setSpacingAfter(overallLineMeanHeight*scaleFactorY);
+        if (leftGap == 0){
+        	paragraph.setAlignment(Element.ALIGN_CENTER);
+        }
+        else{
+        	paragraph.setAlignment(Element.ALIGN_LEFT);
+        }
+        paragraph.setLeading(0, (float) 1.1);
+        
+        paragraph.add(chunk);
+        
+        try {
+        	if (document.topMargin() == 0){
+        		document.setMargins(0, 0, overallLineMeanHeight*scaleFactorY*3, 0);
+        		document.open();
+        	}
+        	if (document.leftMargin() == 0 && leftGap != 0){
+        		document.setMargins(leftGap*scaleFactorX, 0, overallLineMeanHeight*scaleFactorY*3, 0);
+        		document.open();
+        	}
+        	//set the top margin to some value - open must be there to newly set the margin
+        	
+        	//
+        	
+			document.add(paragraph);
+		} catch (DocumentException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
 		}
-		else{
-			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0);
-		}
-
-		//cb.endText();
+        
 	}
 
 
