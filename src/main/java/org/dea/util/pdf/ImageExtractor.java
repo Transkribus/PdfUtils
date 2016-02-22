@@ -4,7 +4,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 
-import org.dea.util.file.DeaFileUtils;
+import org.apache.commons.io.FilenameUtils;
 
 import com.itextpdf.text.DocumentException;
 import com.itextpdf.text.pdf.PdfReader;
@@ -29,7 +29,7 @@ public class ImageExtractor {
         
         File file = new File(filepath);
         final String parentDir = file.getParent();
-        final String name = DeaFileUtils.getFileNameWithoutExtension(file.getName());
+        final String name = FilenameUtils.getBaseName(file.getName());
         final String out = parentDir + File.separator + name + "-%s.%s";
         
         PdfReaderContentParser parser = new PdfReaderContentParser(reader);

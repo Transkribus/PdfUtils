@@ -59,14 +59,14 @@
 		<!-- END FOR LOGGING  -->
 	    
 		<dependency>
-			<groupId>org.dea.util</groupId>
-			<artifactId>fileutils</artifactId>
-			<version>0.0.1</version>
-			</dependency>
-		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
 			<version>5.5.3</version>
+		</dependency>
+		<dependency>
+			<groupId>commons-io</groupId>
+			<artifactId>commons-io</artifactId>
+			<version>2.4</version>
 		</dependency>
 		<dependency>
 			<groupId>org.apache.commons</groupId>

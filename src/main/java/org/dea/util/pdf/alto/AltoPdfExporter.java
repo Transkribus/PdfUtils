@@ -12,8 +12,8 @@ import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
-import org.dea.util.file.DeaFileUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -124,7 +124,7 @@ public class AltoPdfExporter {
 			final String imgName = imgFile.getName();
 			if(isTif(imgName) && doCompressTif){
 				tmp = new File(imgFile.getParent() + File.separator 
-						+ DeaFileUtils.getFileNameWithoutExtension(imgFile) + "_tmp.jpeg");
+						+ FilenameUtils.getBaseName(imgFile.getName()) + "_tmp.jpeg");
 				TiffToJpg(imgFile, tmp, JPEG_QUALITY);
 				img = Image.getInstance(tmp.getAbsolutePath());				
 			} else {			
@@ -136,7 +136,7 @@ public class AltoPdfExporter {
 			pdf.addPage(img, e.getRight(), false);
 			
 			if(createSinglePagePdfs){
-				File singlePdfOut = new File(pdfDir + File.separator + DeaFileUtils.getFileNameWithoutExtension(e.getRight())+".pdf");
+				File singlePdfOut = new File(pdfDir + File.separator + FilenameUtils.getBaseName(e.getRight().getName())+".pdf");
 				createPdf(img, e.getRight(), singlePdfOut);
 			}
 			if(tmp != null){
@@ -185,7 +185,7 @@ public class AltoPdfExporter {
 		
 		List<Pair<File, File>> files = new ArrayList<>(imgFiles.size());
 		for(File img : imgFiles){
-			final String name = DeaFileUtils.getFileNameWithoutExtension(img);
+			final String name = FilenameUtils.getBaseName(img.getName());
 			File xml = new File(altoDir.getAbsolutePath() + File.separator + name + XML_EXT);
 			if(!xml.exists()){
 				throw new IOException("No XML found for file " + img.getAbsolutePath() + " at " + altoDir.getAbsolutePath());
