@@ -9,12 +9,12 @@
 		<name>DEA</name>
 	</organization>
 	<repositories>
-		<!-- DEA Gulliver artifactory: -->
+		<!-- dea artifactory: -->		
 		<repository>
-			<id>dea-gulliver</id>
-			<name>dea-gulliver-releases</name>
-			<url>http://dea-gulliver.uibk.ac.at:8888/artifactory/libs-release-local</url>
-		</repository>
+			<id>dea-artifactory</id>
+			<name>dea-artifactory-releases</name>
+			<url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release/</url>
+		</repository>		
 	</repositories>
 	
 	<dependencies>
