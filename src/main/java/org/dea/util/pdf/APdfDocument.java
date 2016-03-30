@@ -228,7 +228,7 @@ public abstract class APdfDocument {
 
 		Chunk c = new Chunk(textPhrase.getContent());
 				
-		//logger.debug("rotation " + rotation);
+		logger.debug("rotation " + rotation);
 		if (Math.abs(rotation) > 1.5){
 			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
