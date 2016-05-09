@@ -10,10 +10,12 @@ to build your project.
 
 ### Requirements
 - Java >= version 7
-- All dependencies are gathered via maven
+- Maven
+- All further dependencies are gathered via maven
 
 ### Build Steps
 ```
+git clone https://github.com/Transkribus/PdfUtils
 mvn install
 ```
 
