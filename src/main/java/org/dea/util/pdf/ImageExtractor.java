@@ -18,10 +18,12 @@ public class ImageExtractor {
 	/** The new document to which we've added a border rectangle. */
     public static final String RESULT = "results/part4/chapter15/Img%s.%s";
     
+    
     /**
      * Parses a PDF and extracts all the images.
-     * @param src the source PDF
-     * @param dest the resulting PDF
+     * @param filepath
+     * @throws IOException
+     * @throws DocumentException
      */
     public void extractImages(String filepath)
         throws IOException, DocumentException {
@@ -40,11 +42,12 @@ public class ImageExtractor {
         reader.close();
     }
 
+    
     /**
      * Main method.
-     * @param    args    no arguments needed
-     * @throws DocumentException 
+     * @param args
      * @throws IOException
+     * @throws DocumentException
      */
     public static void main(String[] args) throws IOException, DocumentException {
     	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
@@ -56,8 +59,10 @@ public class ImageExtractor {
         /** The new document to which we've added a border rectangle. */
         protected String path = "";
      
+        
         /**
          * Creates a RenderListener that will look for images.
+         * @param path
          */
         public MyImageRenderListener(String path) {
             this.path = path;
