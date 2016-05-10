@@ -108,15 +108,6 @@ public abstract class APdfDocument {
 		return writer.getPageNumber();
 	}
 
-	/**
-	 * @param boundRect The bounding Rectangle for this string
-	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
-	 * @param text the text content
-	 * @param cb 
-	 * @param cutoffLeft
-	 * @param cutoffTop
-	 * @param bf
-	 */
 	protected void addString(java.awt.Rectangle boundRect, Double baseLineMeanY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, double angle) {
 		if(baseLineMeanY == null || baseLineMeanY == 0) {
 			//no baseline -> divide bounding rectangle height by three and expect the line to be in the upper two thirds
@@ -153,18 +144,6 @@ public abstract class APdfDocument {
 		cb.endText();
 	}
 	
-	/**
-	 * @param boundRect The bounding Rectangle for this string
-	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
-	 * @param text the text content
-	 * @param cb 
-	 * @param cutoffLeft
-	 * @param cutoffTop
-	 * @param bf
-	 * @param color 
-	 * @throws IOException 
-	 * @throws DocumentException 
-	 */
 	protected void addUniformString(double c_height, float posX, float posY, final Phrase textPhrase, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
 
 		/*
@@ -308,18 +287,6 @@ public abstract class APdfDocument {
 
 	}
 	
-	/**
-	 * @param boundRect The bounding Rectangle for this string
-	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
-	 * @param text the text content
-	 * @param cb 
-	 * @param cutoffLeft
-	 * @param cutoffTop
-	 * @param bf
-	 * @param color 
-	 * @throws IOException 
-	 * @throws DocumentException 
-	 */
 	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
 
 		/*

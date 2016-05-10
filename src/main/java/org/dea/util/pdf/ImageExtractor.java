@@ -15,18 +15,14 @@ import com.itextpdf.text.pdf.parser.RenderListener;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 
 public class ImageExtractor {
-	/** The new document to which we've added a border rectangle. */
-    public static final String RESULT = "results/part4/chapter15/Img%s.%s";
-    
     
     /**
      * Parses a PDF and extracts all the images.
-     * @param filepath
-     * @throws IOException
-     * @throws DocumentException
+     * @param filepath path to the PDF file
+     * @throws IOException if document can't be read or images can't be written to parent path of PDF file
      */
     public void extractImages(String filepath)
-        throws IOException, DocumentException {
+        throws IOException {
         PdfReader reader = new PdfReader(filepath);
         
         File file = new File(filepath);
@@ -45,9 +41,8 @@ public class ImageExtractor {
     
     /**
      * Main method.
-     * @param args
-     * @throws IOException
-     * @throws DocumentException
+     * @param args unused so far
+     * @throws IOException if document can't be read or images can't be written
      */
     public static void main(String[] args) throws IOException, DocumentException {
     	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
