@@ -20,5 +20,5 @@ mvn install
 ```
 
 ### Links
-- Javadoc TODO
+- http://dbis-halvar.uibk.ac.at/PdfUtils/apidocs/index.html
 - http://itextpdf.com/
