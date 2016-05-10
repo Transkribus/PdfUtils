@@ -29,9 +29,9 @@
 			<url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release-local</url>
 		</repository>
 		<site>
-			<id>dbis-halvar-website</id>
-			<name>dbis-halvar-website</name>
-			<url>scp://dbis-halvar.uibk.ac.at/var/www/html/PdfUtils</url>
+			<id>website</id>
+			<name>transkribus.eu</name>
+			<url>scp://read01.uibk.ac.at/var/www/html/PdfUtils</url>
 		</site>
 	</distributionManagement>
 	<dependencies>

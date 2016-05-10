@@ -20,5 +20,5 @@ mvn install
 ```
 
 ### Links
-- http://dbis-halvar.uibk.ac.at/PdfUtils/apidocs/index.html
+- https://transkribus.eu/PdfUtils/apidocs/index.html
 - http://itextpdf.com/
