@@ -16,6 +16,7 @@ to build your project.
 ### Build Steps
 ```
 git clone https://github.com/Transkribus/PdfUtils
+cd PdfUtils
 mvn install
 ```
 
