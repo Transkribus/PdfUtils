@@ -4,9 +4,6 @@
 	<groupId>org.dea.util</groupId>
 	<artifactId>PdfUtils</artifactId>
 	<version>0.0.1</version>
-	<name>PdfUtils</name>
-	<description>Utility classes for building PDFs
-© 2013 the DEA</description>
 	<!-- <packaging>jar</packaging> -->
 	<organization>
 		<name>DEA</name>
@@ -15,66 +12,61 @@
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 	</properties>
 	<repositories>
-		<!-- dea artifactory: -->
+		<!-- dea artifactory: -->		
 		<repository>
 			<id>dea-artifactory</id>
 			<name>dea-artifactory-releases</name>
 			<url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release/</url>
-		</repository>
+		</repository>		
 	</repositories>
 	<distributionManagement>
-		<repository>
-			<id>dbis-halvar-artifactory</id>
-			<name>dbis-halvar-releases</name>
-			<url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release-local</url>
-		</repository>
-		<site>
-			<id>website</id>
-			<name>transkribus.eu</name>
-			<url>scp://read01.uibk.ac.at/var/www/html/PdfUtils</url>
-		</site>
+	    <repository>
+	        <id>dbis-halvar-artifactory</id>
+	        <name>dbis-halvar-releases</name>
+	        <url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release-local</url>
+	    </repository>
 	</distributionManagement>
 	<dependencies>
-		<!-- FOR LOGGING: -->
+	    		<!-- FOR LOGGING:  -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
 			<version>1.7.10</version>
-		</dependency>
-
-		<!-- Next 2 are for log4j 1.2 logging with sl4j: -->
-		<!-- <dependency> -->
-		<!-- <groupId>log4j</groupId> -->
-		<!-- <artifactId>log4j</artifactId> -->
-		<!-- <version>1.2.17</version> -->
-		<!-- </dependency> -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.slf4j</groupId> -->
-		<!-- <artifactId>slf4j-log4j12</artifactId> -->
-		<!-- <version>1.7.10</version> -->
-		<!-- </dependency> -->
-
+		</dependency>		
+		
+		 <!-- Next 2 are for log4j 1.2 logging with sl4j: -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>log4j</groupId> -->
+<!-- 			<artifactId>log4j</artifactId> -->
+<!-- 			<version>1.2.17</version> -->
+<!-- 		</dependency>		 -->
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.slf4j</groupId> -->
+<!-- 			<artifactId>slf4j-log4j12</artifactId> -->
+<!-- 			<version>1.7.10</version> -->
+<!-- 		</dependency>		 -->
+	
 		<!-- Next 2 are for logback logging via sl4j: -->
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-classic</artifactId>
 			<version>1.1.2</version>
 		</dependency>
-
+		
 		<dependency>
 			<groupId>ch.qos.logback</groupId>
 			<artifactId>logback-core</artifactId>
 			<version>1.1.2</version>
 		</dependency>
-
+		
 		<!-- This is for supporting conditions in logback.xml: -->
-		<!-- <dependency> -->
-		<!-- <groupId>org.codehaus.janino</groupId> -->
-		<!-- <artifactId>janino</artifactId> -->
-		<!-- <version>2.6.1</version> -->
-		<!-- </dependency> -->
-		<!-- END FOR LOGGING -->
-
+<!-- 		<dependency> -->
+<!-- 			<groupId>org.codehaus.janino</groupId> -->
+<!-- 			<artifactId>janino</artifactId> -->
+<!-- 			<version>2.6.1</version> -->
+<!-- 		</dependency>		 -->
+		<!-- END FOR LOGGING  -->
+	    
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
@@ -96,13 +88,13 @@
 			<artifactId>jai_codec</artifactId>
 			<version>1.1.3</version>
 		</dependency>
-
+	
 		<dependency>
 			<groupId>javax.media</groupId>
 			<artifactId>jai_core</artifactId>
 			<version>1.1.3</version>
 		</dependency>
-
+	
 		<dependency>
 			<groupId>com.sun.media</groupId>
 			<artifactId>jai_imageio</artifactId>
@@ -120,16 +112,14 @@
 				</configuration>
 			</plugin>
 			<plugin>
-				<!-- run goals: clean compile assembly:single -->
+			<!-- run goals: clean compile assembly:single -->
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
 					<archive>
 						<manifest>
 							<mainClass>org.dea.util.pdf.alto.AltoPdfExporter</mainClass>
-							<!-- impl and spec entries are needed by image-io, otherwise "vendor 
-								== null" exception occurs -->
-							<!-- not also that at the top <organization><name> MUST be Sun Microsystems, 
-								Inc. -->
+							<!-- impl and spec entries are needed by image-io, otherwise "vendor == null" exception occurs -->
+							<!-- not also that at the top <organization><name> MUST be Sun Microsystems, Inc.  -->
 							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
 							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
 						</manifest>
@@ -143,44 +133,12 @@
 					</configuration>
 				</configuration>
 			</plugin>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.3</version>
-				<configuration>
-					<show>private</show>
-					<nohelp>true</nohelp>
-				</configuration>
-			</plugin>
 		</plugins>
-		<pluginManagement>
-			<plugins>
-				<plugin>
-					<groupId>org.apache.maven.plugins</groupId>
-					<artifactId>maven-site-plugin</artifactId>
-					<version>3.5.1</version>
-					<dependencies>
-						<dependency><!-- add support for ssh/scp -->
-							<groupId>org.apache.maven.wagon</groupId>
-							<artifactId>wagon-ssh</artifactId>
-							<version>1.0</version>
-						</dependency>
-					</dependencies>
-				</plugin>
-			</plugins>
-		</pluginManagement>
 	</build>
-	<reporting>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-javadoc-plugin</artifactId>
-				<version>2.10.3</version>
-				<configuration>
-					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
-					<show>public</show>
-				</configuration>
-			</plugin>
-		</plugins>
-	</reporting>
+	<name>PdfUtils</name>
+	<description>Utility classes for building PDFs
+© 2013 the DEA</description>
+
+
+
 </project>

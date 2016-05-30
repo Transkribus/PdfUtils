@@ -15,14 +15,16 @@ import com.itextpdf.text.pdf.parser.RenderListener;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 
 public class ImageExtractor {
+	/** The new document to which we've added a border rectangle. */
+    public static final String RESULT = "results/part4/chapter15/Img%s.%s";
     
     /**
      * Parses a PDF and extracts all the images.
-     * @param filepath path to the PDF file
-     * @throws IOException if document can't be read or images can't be written to parent path of PDF file
+     * @param src the source PDF
+     * @param dest the resulting PDF
      */
     public void extractImages(String filepath)
-        throws IOException {
+        throws IOException, DocumentException {
         PdfReader reader = new PdfReader(filepath);
         
         File file = new File(filepath);
@@ -38,15 +40,58 @@ public class ImageExtractor {
         reader.close();
     }
 
-    
+    /**
+     * Parses a PDF document and renders all images to an output directory.
+     * @param filepath Path to PDF document
+     * @param outDir Output directory
+     * @throws IOException
+     * @throws DocumentException
+     */
+    public void extractImages(String filepath, String outDir) 
+    	throws IOException, DocumentException, SecurityException {
+    	
+    	// create file reader for input pdf
+        PdfReader reader = new PdfReader(filepath);
+        System.out.println("DEBUG -- pdf info  " + reader.getInfo());
+        System.out.println(reader.getNumberOfPages() + "pages found ");
+        
+        
+        // extract file name
+        File file = new File(filepath);
+        final String name = FilenameUtils.getBaseName(file.getName());
+        
+        // create output folder/filename(s)
+        File dir = new File(outDir + File.separator + name);
+        dir.mkdir();
+        
+        final String out = dir.getPath() + File.separator 
+        		+ name + "-%s.%s.txt";
+
+        // prepare parsing objects
+        PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+        MyImageRenderListener listener = new MyImageRenderListener(out);
+        
+        for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+            parser.processContent(i, listener);
+            System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ i + ": " + parser.toString());
+        }
+        reader.close();
+    	
+    }
     /**
      * Main method.
-     * @param args unused so far
-     * @throws IOException if document can't be read or images can't be written
+     * @param    args    no arguments needed
+     * @throws DocumentException 
+     * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-    	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
-        new ImageExtractor().extractImages(test);
+    //	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
+    //    new ImageExtractor().extractImages(test);
+     	String outDir = System.getProperty("java.io.tmpdir");
+    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
+    	
+    	System.out.println("Writing to " + outDir);
+    	new ImageExtractor().extractImages(test, outDir);
     }
     
     public class MyImageRenderListener implements RenderListener {
@@ -54,10 +99,8 @@ public class ImageExtractor {
         /** The new document to which we've added a border rectangle. */
         protected String path = "";
      
-        
         /**
          * Creates a RenderListener that will look for images.
-         * @param path
          */
         public MyImageRenderListener(String path) {
             this.path = path;
