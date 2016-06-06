@@ -14,14 +14,20 @@ import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
 import com.itextpdf.text.pdf.parser.RenderListener;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 
+
+/**
+ * @author lange
+ * Extract images from a given pdf file
+ * Note: extracted images are named with ascending numbers,
+ *       however, the number refers to internal document object counting, 
+ *       not pages nor count of images
+ * FIXME: check whether renaming is necessary 
+ */
 public class ImageExtractor {
-	/** The new document to which we've added a border rectangle. */
-    public static final String RESULT = "results/part4/chapter15/Img%s.%s";
     
     /**
      * Parses a PDF and extracts all the images.
      * @param src the source PDF
-     * @param dest the resulting PDF
      */
     public void extractImages(String filepath)
         throws IOException, DocumentException {
@@ -52,10 +58,7 @@ public class ImageExtractor {
     	
     	// create file reader for input pdf
         PdfReader reader = new PdfReader(filepath);
-        System.out.println("DEBUG -- pdf info  " + reader.getInfo());
-        System.out.println(reader.getNumberOfPages() + "pages found ");
-        
-        
+                
         // extract file name
         File file = new File(filepath);
         final String name = FilenameUtils.getBaseName(file.getName());
@@ -65,7 +68,7 @@ public class ImageExtractor {
         dir.mkdir();
         
         final String out = dir.getPath() + File.separator 
-        		+ name + "-%s.%s.txt";
+        		+ name + "-%s.%s";
 
         // prepare parsing objects
         PdfReaderContentParser parser = new PdfReaderContentParser(reader);
@@ -73,7 +76,7 @@ public class ImageExtractor {
         
         for (int i = 1; i <= reader.getNumberOfPages(); i++) {
             parser.processContent(i, listener);
-            System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ i + ": " + parser.toString());
+            System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ i);
         }
         reader.close();
     	
@@ -87,8 +90,8 @@ public class ImageExtractor {
     public static void main(String[] args) throws IOException, DocumentException {
     //	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
     //    new ImageExtractor().extractImages(test);
-     	String outDir = System.getProperty("java.io.tmpdir");
-    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
+     	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
+    	String test = outDir + "ABP_transcripts.pdf";
     	
     	System.out.println("Writing to " + outDir);
     	new ImageExtractor().extractImages(test, outDir);
@@ -96,7 +99,7 @@ public class ImageExtractor {
     
     public class MyImageRenderListener implements RenderListener {
     	 
-        /** The new document to which we've added a border rectangle. */
+        /** The ouput path (absolute) of the new document. */
         protected String path = "";
      
         /**
@@ -129,8 +132,11 @@ public class ImageExtractor {
                 PdfImageObject image = renderInfo.getImage();
                 if (image == null) return;
                 filename = String.format(path, renderInfo.getRef().getNumber(), image.getFileType());
+                System.out.println("Writing to " + filename);
+                
                 os = new FileOutputStream(filename);
                 os.write(image.getImageAsBytes());
+                //ImageIO.write(image.getBufferedImage(), "png", os);
                 os.flush();
                 os.close();
             } catch (IOException e) {
