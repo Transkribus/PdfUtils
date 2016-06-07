@@ -18,13 +18,20 @@ import com.itextpdf.text.pdf.parser.TextRenderInfo;
 /**
  * @author lange
  * Extract images from a given pdf file
- * Note: extracted images are named with ascending numbers,
- *       however, the number refers to internal document object counting, 
- *       not pages nor count of images
- * FIXME: check whether renaming is necessary 
+ * Note: extracted images are named with ascending page numbers 
+ * 		 plus internal reference number 
  */
 public class ImageExtractor {
     
+	protected String extractDir;
+	
+	/**
+	 * Object constructor uses user's temporary directory by default
+	 */
+	public ImageExtractor() {
+		this.extractDir = System.getProperty("java.io.tmpdir") + "img" + File.separator;
+	}
+	
     /**
      * Parses a PDF and extracts all the images.
      * @param src the source PDF
@@ -34,9 +41,9 @@ public class ImageExtractor {
         PdfReader reader = new PdfReader(filepath);
         
         File file = new File(filepath);
-        final String parentDir = file.getParent();
+        extractDir = file.getParent();
         final String name = FilenameUtils.getBaseName(file.getName());
-        final String out = parentDir + File.separator + name + "-%s.%s";
+        final String out = extractDir + File.separator + name + "-%s.%s";
         
         PdfReaderContentParser parser = new PdfReaderContentParser(reader);
         MyImageRenderListener listener = new MyImageRenderListener(out);
@@ -46,10 +53,14 @@ public class ImageExtractor {
         reader.close();
     }
 
+    public String getExtractDirectory() {
+    	return extractDir;
+    }
+    
     /**
      * Parses a PDF document and renders all images to an output directory.
      * @param filepath Path to PDF document
-     * @param outDir Output directory
+     * @param outDir Output directory will be expanded with pdf basename
      * @throws IOException
      * @throws DocumentException
      * @return name of created folder
@@ -68,7 +79,10 @@ public class ImageExtractor {
         File dir = new File(outDir + File.separator + name);
         dir.mkdir();
         
-        final String out = dir.getPath() + File.separator 
+        // set extract directory name
+        extractDir = dir.getPath();
+        
+        final String out = extractDir + File.separator 
         		+ name + "-%s_%s.%s";
 
         // prepare parsing objects
