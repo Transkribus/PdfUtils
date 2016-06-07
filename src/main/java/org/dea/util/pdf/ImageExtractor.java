@@ -52,8 +52,9 @@ public class ImageExtractor {
      * @param outDir Output directory
      * @throws IOException
      * @throws DocumentException
+     * @return name of created folder
      */
-    public void extractImages(String filepath, String outDir) 
+    public String extractImages(String filepath, String outDir) 
     	throws IOException, DocumentException, SecurityException {
     	
     	// create file reader for input pdf
@@ -68,18 +69,20 @@ public class ImageExtractor {
         dir.mkdir();
         
         final String out = dir.getPath() + File.separator 
-        		+ name + "-%s.%s";
+        		+ name + "-%s_%s.%s";
 
         // prepare parsing objects
         PdfReaderContentParser parser = new PdfReaderContentParser(reader);
         MyImageRenderListener listener = new MyImageRenderListener(out);
         
         for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+        	listener.setPageNumber(i);
             parser.processContent(i, listener);
             System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ i);
         }
         reader.close();
     	
+        return dir.getAbsolutePath();
     }
     /**
      * Main method.
@@ -91,7 +94,7 @@ public class ImageExtractor {
     //	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
     //    new ImageExtractor().extractImages(test);
      	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
-    	String test = outDir + "ABP_transcripts.pdf";
+    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
     	
     	System.out.println("Writing to " + outDir);
     	new ImageExtractor().extractImages(test, outDir);
@@ -101,14 +104,22 @@ public class ImageExtractor {
     	 
         /** The ouput path (absolute) of the new document. */
         protected String path = "";
+        
+        /** The current page number */
+        protected int num;
      
         /**
          * Creates a RenderListener that will look for images.
          */
         public MyImageRenderListener(String path) {
             this.path = path;
+        	this.num = 0;
         }
-     
+
+        public void setPageNumber(int num) {
+        	this.num = num;
+        }
+        
         /**
          * @see com.itextpdf.text.pdf.parser.RenderListener#beginTextBlock()
          */
@@ -131,8 +142,8 @@ public class ImageExtractor {
                 FileOutputStream os;
                 PdfImageObject image = renderInfo.getImage();
                 if (image == null) return;
-                filename = String.format(path, renderInfo.getRef().getNumber(), image.getFileType());
-                System.out.println("Writing to " + filename);
+                filename = String.format(path, num, renderInfo.getRef().getNumber(), image.getFileType());
+//                System.out.println("Writing to " + filename);
                 
                 os = new FileOutputStream(filename);
                 os.write(image.getImageAsBytes());
@@ -140,7 +151,7 @@ public class ImageExtractor {
                 os.flush();
                 os.close();
             } catch (IOException e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
      
