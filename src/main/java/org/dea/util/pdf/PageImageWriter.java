@@ -19,7 +19,7 @@ public class PageImageWriter {
 	 * Object constructor uses user's temporary directory by default
 	 */
 	public PageImageWriter() {
-		this.extractDir = System.getProperty("java.io.tmpdir") + "img" + File.separator;
+		this.extractDir = System.getProperty("java.io.tmpdir") + File.separator + "img" + File.separator;
 	}	
 	
 
@@ -77,9 +77,10 @@ public class PageImageWriter {
      */
     public static void main(String[] args) throws IOException, DocumentException {
 
-     	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
-    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
-    	
+     	String outDir = System.getProperty("java.io.tmpdir") + File.separator + "pdftest" + File.separator;
+     	new File(outDir).mkdirs();
+//    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
+    	String test = "/mnt/dea_scratch/tmp_philip/TranskribusTermsOfUse_v04-2016.pdf";
     	System.out.println("Writing to " + outDir);
     	new PageImageWriter().extractImages(test, outDir);
     }
