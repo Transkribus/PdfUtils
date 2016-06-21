@@ -173,8 +173,12 @@ public abstract class APdfDocument {
 		currentRotation = rotation;
 		currentPrintWidthScale = 1;
 		
-		if(c_height <= 0.0 || c_height > 300){
+		if(c_height <= 0.){
 			c_height = 10.0/scaleFactorY;
+		}
+		
+		if (c_height > 300){
+			c_height = 150;
 		}
 		
 		//c_height = c_height/scaleFactorY;

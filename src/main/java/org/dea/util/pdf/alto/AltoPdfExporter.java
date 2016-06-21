@@ -6,12 +6,17 @@ import java.io.FileFilter;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.nio.file.DirectoryIteratorException;
+import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
 
+import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.tuple.Pair;
 import org.slf4j.Logger;
@@ -32,9 +37,12 @@ public class AltoPdfExporter {
 	private static final String ALTO_DIR = "alto";
 	private static final String IMG_DIR = "OCRmaster";
 	private static final String PDF_DIR = "pdf";
-	private static final float JPEG_QUALITY = 0.35f;
+	private static final float JPEG_QUALITY = 0.9f;
+	
+	static int totalPdfs = 0;
 		
 	public static void main(String[] args) {
+
 		if(args.length == 0 || args.length > 3){
 			usage();
 			return;
@@ -72,16 +80,38 @@ public class AltoPdfExporter {
 		List<File> docDirs = new LinkedList<>();
 		addDocDirs(dir, docDirs);
 		
+		int countDirs = 0;
+		
 		for(File d : docDirs){
+			countDirs++;
 			final String outFilePath = d.getAbsolutePath() + File.separator + d.getName() + ".pdf";
 			File out = new File(outFilePath);
 			logger.info("Creating PDF: " + d.getAbsolutePath() + " -> " + out.getName());
-			try {
-				createPdf(d, out, createSinglePagePdfs, doCompressTif);
-			} catch (Exception e) {
-				logger.error("Could not create PDF for dir: " + d.getAbsolutePath(), e);
-				continue;
-			}
+			
+//			if (new File(outFilePath).exists()){
+//				logger.info("PDF exists: " + outFilePath);
+//				//move one layer up
+//				try {
+//					logger.info("new file location: " + d.getParentFile().getAbsolutePath() + File.separator + d.getName() + ".pdf");
+//					//System.in.read();
+//					FileUtils.moveFile(new File(outFilePath), new File(d.getParentFile().getAbsolutePath() + File.separator + d.getName() + ".pdf"));
+//					//System.in.read();
+//				} catch (IOException e) {
+//					// TODO Auto-generated catch block
+//					e.printStackTrace();
+//				}
+//				
+//			}
+//			else{
+				try {
+					createPdf(d, out, createSinglePagePdfs, doCompressTif);
+					logger.info(countDirs + " collection PDFs created.");
+					totalPdfs++;
+				} catch (Exception e) {
+					logger.error("Could not create PDF for dir: " + d.getAbsolutePath(), e);
+					continue;
+				}
+//			}
 		}
 	}
 
@@ -132,17 +162,28 @@ public class AltoPdfExporter {
 			}
 			
 
-					
-			pdf.addPage(img, e.getRight(), false);
+			//to avoid size adoption a second time - so make a second instance for usage in the single page export
+			Image singleImg = Image.getInstance(img);
+			
+			File xmlFile = null;
+			if (e != null){
+				xmlFile = e.getRight();
+			}
+			
+			pdf.addPage(img, xmlFile, false);
 			
 			if(createSinglePagePdfs){
-				File singlePdfOut = new File(pdfDir + File.separator + FilenameUtils.getBaseName(e.getRight().getName())+".pdf");
-				createPdf(img, e.getRight(), singlePdfOut);
+				File singlePdfOut = new File(pdfDir + File.separator + FilenameUtils.getBaseName(imgFile.getName())+".pdf");
+				createPdf(singleImg, xmlFile, singlePdfOut);
 			}
 			if(tmp != null){
 				tmp.delete();
 			}
 		}
+		logger.info(files.size() + " single PDFs created.");
+		totalPdfs += files.size();
+		logger.info("--- (" + totalPdfs + ") total PDFs created.");
+		
 		pdf.close();
 		long end = System.currentTimeMillis();
 		logger.info(end-start + " ms");
@@ -154,7 +195,7 @@ public class AltoPdfExporter {
 	}
 
 	public static void createPdf(Image img, File alto, File singlePdfOut) throws IOException, DocumentException {
-		logger.info("Creating single page PDF: " + singlePdfOut.getAbsolutePath());
+		//logger.info("Creating single page PDF: " + singlePdfOut.getAbsolutePath());
 		AltoPdfDocument singlePdf = new AltoPdfDocument(singlePdfOut);
 		singlePdf.addPage(img, alto, false);
 		singlePdf.close();
@@ -188,7 +229,8 @@ public class AltoPdfExporter {
 			final String name = FilenameUtils.getBaseName(img.getName());
 			File xml = new File(altoDir.getAbsolutePath() + File.separator + name + XML_EXT);
 			if(!xml.exists()){
-				throw new IOException("No XML found for file " + img.getAbsolutePath() + " at " + altoDir.getAbsolutePath());
+				xml = null;
+				//throw new IOException("No XML found for file " + img.getAbsolutePath() + " at " + altoDir.getAbsolutePath());
 			}
 			files.add(Pair.of(img, xml));
 		}

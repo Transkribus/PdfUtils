@@ -67,7 +67,8 @@ public class AltoPdfDocument extends APdfDocument {
 		//open alto xml
 		Document alto = null;
 		try {
-			alto = parseDomFromFile(altoFile);
+			if (altoFile != null)
+				alto = parseDomFromFile(altoFile);
 		} catch (SAXException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
@@ -76,11 +77,14 @@ public class AltoPdfDocument extends APdfDocument {
 			e.printStackTrace();
 		}
 		
-		addText(alto, 0, 0);
+		if (alto != null){
+			addText(alto, 0, 0);
+		}
 		
 		if(addAdditionalPlainTextPage){
-			document.newPage();		
-			addText(alto, 0, 0);
+			document.newPage();	
+			if (alto != null)
+				addText(alto, 0, 0);
 		}
 	}
 
