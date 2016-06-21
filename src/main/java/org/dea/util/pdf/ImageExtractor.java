@@ -14,23 +14,36 @@ import com.itextpdf.text.pdf.parser.PdfReaderContentParser;
 import com.itextpdf.text.pdf.parser.RenderListener;
 import com.itextpdf.text.pdf.parser.TextRenderInfo;
 
+
+/**
+ * @author lange
+ * Extract images from a given pdf file
+ * Note: extracted images are named with ascending page numbers 
+ * 		 plus internal reference number 
+ */
 public class ImageExtractor {
-	/** The new document to which we've added a border rectangle. */
-    public static final String RESULT = "results/part4/chapter15/Img%s.%s";
     
+	protected String extractDir;
+	
+	/**
+	 * Object constructor uses user's temporary directory by default
+	 */
+	public ImageExtractor() {
+		this.extractDir = System.getProperty("java.io.tmpdir") + "img" + File.separator;
+	}
+	
     /**
      * Parses a PDF and extracts all the images.
      * @param src the source PDF
-     * @param dest the resulting PDF
      */
     public void extractImages(String filepath)
         throws IOException, DocumentException {
         PdfReader reader = new PdfReader(filepath);
         
         File file = new File(filepath);
-        final String parentDir = file.getParent();
+        extractDir = file.getParent();
         final String name = FilenameUtils.getBaseName(file.getName());
-        final String out = parentDir + File.separator + name + "-%s.%s";
+        final String out = extractDir + File.separator + name + "-%s.%s";
         
         PdfReaderContentParser parser = new PdfReaderContentParser(reader);
         MyImageRenderListener listener = new MyImageRenderListener(out);
@@ -40,6 +53,51 @@ public class ImageExtractor {
         reader.close();
     }
 
+    public String getExtractDirectory() {
+    	return extractDir;
+    }
+    
+    /**
+     * Parses a PDF document and renders all images to an output directory.
+     * @param filepath Path to PDF document
+     * @param outDir Output directory will be expanded with pdf basename
+     * @throws IOException
+     * @throws DocumentException
+     * @return name of created folder
+     */
+    public String extractImages(String filepath, String outDir) 
+    	throws IOException, DocumentException, SecurityException {
+    	
+    	// create file reader for input pdf
+        PdfReader reader = new PdfReader(filepath);
+                
+        // extract file name
+        File file = new File(filepath);
+        final String name = FilenameUtils.getBaseName(file.getName());
+        
+        // create output folder/filename(s)
+        File dir = new File(outDir + File.separator + name);
+        dir.mkdir();
+        
+        // set extract directory name
+        extractDir = dir.getPath();
+        
+        final String out = extractDir + File.separator 
+        		+ name + "-%s_%s.%s";
+
+        // prepare parsing objects
+        PdfReaderContentParser parser = new PdfReaderContentParser(reader);
+        MyImageRenderListener listener = new MyImageRenderListener(out);
+        
+        for (int i = 1; i <= reader.getNumberOfPages(); i++) {
+        	listener.setPageNumber(i);
+            parser.processContent(i, listener);
+            System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ i);
+        }
+        reader.close();
+    	
+        return dir.getAbsolutePath();
+    }
     /**
      * Main method.
      * @param    args    no arguments needed
@@ -47,22 +105,35 @@ public class ImageExtractor {
      * @throws IOException
      */
     public static void main(String[] args) throws IOException, DocumentException {
-    	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
-        new ImageExtractor().extractImages(test);
+    //	String test = "/mnt/dea_scratch/TRP/PdfTestDoc/A 0073.pdf";
+    //    new ImageExtractor().extractImages(test);
+     	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
+    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
+    	
+    	System.out.println("Writing to " + outDir);
+    	new ImageExtractor().extractImages(test, outDir);
     }
     
     public class MyImageRenderListener implements RenderListener {
     	 
-        /** The new document to which we've added a border rectangle. */
+        /** The ouput path (absolute) of the new document. */
         protected String path = "";
+        
+        /** The current page number */
+        protected int num;
      
         /**
          * Creates a RenderListener that will look for images.
          */
         public MyImageRenderListener(String path) {
             this.path = path;
+        	this.num = 0;
         }
-     
+
+        public void setPageNumber(int num) {
+        	this.num = num;
+        }
+        
         /**
          * @see com.itextpdf.text.pdf.parser.RenderListener#beginTextBlock()
          */
@@ -85,13 +156,16 @@ public class ImageExtractor {
                 FileOutputStream os;
                 PdfImageObject image = renderInfo.getImage();
                 if (image == null) return;
-                filename = String.format(path, renderInfo.getRef().getNumber(), image.getFileType());
+                filename = String.format(path, num, renderInfo.getRef().getNumber(), image.getFileType());
+//                System.out.println("Writing to " + filename);
+                
                 os = new FileOutputStream(filename);
                 os.write(image.getImageAsBytes());
+                //ImageIO.write(image.getBufferedImage(), "png", os);
                 os.flush();
                 os.close();
             } catch (IOException e) {
-                System.out.println(e.getMessage());
+                System.err.println(e.getMessage());
             }
         }
      

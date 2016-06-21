@@ -1,6 +1,9 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
 	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
 	<modelVersion>4.0.0</modelVersion>
+	<name>PdfUtils</name>
+	<description>Utility classes for building PDFs
+© 2013 the DEA</description>
 	<groupId>org.dea.util</groupId>
 	<artifactId>PdfUtils</artifactId>
 	<version>0.0.1</version>
@@ -25,6 +28,11 @@
 	        <name>dbis-halvar-releases</name>
 	        <url>http://dbis-halvar.uibk.ac.at/artifactory/libs-release-local</url>
 	    </repository>
+	    <site>
+			<id>website</id>
+			<name>transkribus.eu</name>
+			<url>scp://read01.uibk.ac.at/var/www/html/PdfUtils</url>
+		</site>
 	</distributionManagement>
 	<dependencies>
 	    		<!-- FOR LOGGING:  -->
@@ -67,6 +75,12 @@
 <!-- 		</dependency>		 -->
 		<!-- END FOR LOGGING  -->
 	    
+		<!-- http://mvnrepository.com/artifact/org.apache.pdfbox/pdfbox -->
+		<dependency>
+		    <groupId>org.apache.pdfbox</groupId>
+		    <artifactId>pdfbox</artifactId>
+		    <version>2.0.1</version>
+		</dependency>
 		<dependency>
 			<groupId>com.itextpdf</groupId>
 			<artifactId>itextpdf</artifactId>
@@ -112,6 +126,17 @@
 				</configuration>
 			</plugin>
 			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.3</version>
+				<configuration>
+					<additionalparam>-Xdoclint:none</additionalparam>
+					<show>private</show>
+					<nohelp>true</nohelp>
+<!-- 					<failOnError>false</failOnError>				 -->
+				</configuration>
+			</plugin>	
+			<plugin>
 			<!-- run goals: clean compile assembly:single -->
 				<artifactId>maven-assembly-plugin</artifactId>
 				<configuration>
@@ -134,11 +159,37 @@
 				</configuration>
 			</plugin>
 		</plugins>
+		<pluginManagement>
+			<plugins>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-site-plugin</artifactId>
+					<version>3.5.1</version>
+					<dependencies>
+						<dependency><!-- add support for ssh/scp -->
+							<groupId>org.apache.maven.wagon</groupId>
+							<artifactId>wagon-ssh</artifactId>
+							<version>1.0</version>
+						</dependency>
+					</dependencies>
+				</plugin>
+			</plugins>
+		</pluginManagement>
 	</build>
-	<name>PdfUtils</name>
-	<description>Utility classes for building PDFs
-© 2013 the DEA</description>
-
+	<reporting>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.3</version>
+				<configuration>
+					<stylesheetfile>${basedir}/src/main/javadoc/stylesheet.css</stylesheetfile>
+					<show>public</show>
+					<additionalparam>-Xdoclint:none</additionalparam>
+				</configuration>
+			</plugin>
+		</plugins>
+	</reporting>
 
 
 </project>
