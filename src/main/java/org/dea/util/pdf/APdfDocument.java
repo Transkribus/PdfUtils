@@ -101,6 +101,7 @@ public abstract class APdfDocument {
 	
 	public void close() {
 		document.close();
+		writer.close();
 	}
 	
 	public int getPageNumber() {
@@ -324,8 +325,9 @@ public abstract class APdfDocument {
 	 * @throws IOException 
 	 * @throws DocumentException 
 	 */
-	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
+	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final String expansion, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
 
+		String tagText = text.concat(expansion);
 		/*
 		 * states that text gets read right to left
 		 */
@@ -343,7 +345,7 @@ public abstract class APdfDocument {
 		
 		cb.setFontAndSize(bf, (float) c_height);
 						
-		float effTextWidth = cb.getEffectiveStringWidth(text, false);	
+		float effTextWidth = cb.getEffectiveStringWidth(tagText, false);	
 		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth) - posX;
 
 		cb.endText();
@@ -358,7 +360,7 @@ public abstract class APdfDocument {
 		
 		currentPrintWidth = effTextWidth*currentPrintWidthScale;
 
-		Chunk c = new Chunk(text);
+		Chunk c = new Chunk(tagText);
 		
 		/*
 		 *       document.open();
@@ -424,20 +426,18 @@ public abstract class APdfDocument {
             cb.fill();
 //            //Unwind the graphics state
             cb.restoreState();
-		}
-		else{
-			logger.debug("Color is null");
-		}
-		
+		}		
 
 		cb.beginText();
 
-		
 		transformation.setToTranslation(currentLineTx, currentLineTy);
 		transformation.scale(scaleFactorX, scaleFactorY);
 		transformation.rotate(rotation);
 		
 		cb.setTextMatrix(transformation);
+		
+		//if endText() is not called here the PDF file gives an error later on
+		cb.endText();
 
 		if (searchAction && c != null){
 			//logger.debug("find tagname: " + text);
@@ -450,7 +450,7 @@ public abstract class APdfDocument {
 
 		    //logger.debug("Resource Path: " + RESOURCE.getPath());
 
-		    InputStream is= this.getClass().getClassLoader().getResourceAsStream("js/findTagname.js");
+		    InputStream is = this.getClass().getClassLoader().getResourceAsStream("js/findTagname.js");
 		    String jsString = fromStream(is);
 		    
 		    //writer.addJavaScript(Utilities.readFileToString(javaScriptFile));
@@ -460,20 +460,21 @@ public abstract class APdfDocument {
    
 		}
 		else{
-
+			phrase = new Phrase(c);
 			if (rtl){
-				phrase = new Phrase(c);
+				
 				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phrase, (float) currentLineTx, (float) currentLineTy, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
 			}
 			else{
 				
 				//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
-				cb.showText(c.getContent());
+				ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, (float) rotation);
+				//cb.showText(c.getContent());
 			}
 
 		}
 
-		cb.endText();
+		
 
 	}
 	
