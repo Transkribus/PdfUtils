@@ -45,8 +45,8 @@ public class PageImageWriter {
 
     	// create file reader for input pdf
     	PDDocument document = PDDocument.load(file);
-    	PDFRenderer renderer = new PDFRenderer(document);    	        
-        // create output folder/filename(s)
+    	PDFRenderer renderer = new PDFRenderer(document);
+    	// create output folder/filename(s)
         File dir = new File(outDir + File.separator + name);
         dir.mkdir();
         
@@ -59,7 +59,7 @@ public class PageImageWriter {
         // prepare parsing objects
         
         for (int i = 0; i < document.getNumberOfPages(); i++) {
-        	BufferedImage bim = renderer.renderImage(i);
+        	BufferedImage bim = renderer.renderImageWithDPI(i, 300);
         	ImageIO.write(bim, "png", new File(String.format(out, i+1, "png")));
         	
         	System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ (i+1));
