@@ -128,7 +128,8 @@ public class AltoPdfDocument extends APdfDocument {
 				Double baseLineMeanY = y + height*0.9;
 				
 				java.awt.Rectangle boundRect = new java.awt.Rectangle(x, y, width, height);
-				super.addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf, 0);
+				//last argument says if text is from right to left
+				super.addString(boundRect, baseLineMeanY, textContent, cb, cutoffLeft, cutoffTop, bf, 0, false);
 			}
 		}
 		

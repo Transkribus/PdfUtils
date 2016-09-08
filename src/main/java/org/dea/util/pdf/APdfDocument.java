@@ -118,7 +118,7 @@ public abstract class APdfDocument {
 	 * @param cutoffTop
 	 * @param bf
 	 */
-	protected void addString(java.awt.Rectangle boundRect, Double baseLineMeanY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, double angle) {
+	protected void addString(java.awt.Rectangle boundRect, Double baseLineMeanY, final String text, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, double angle, boolean rtl) {
 		if(baseLineMeanY == null || baseLineMeanY == 0) {
 			//no baseline -> divide bounding rectangle height by three and expect the line to be in the upper two thirds
 			double oneThird = (boundRect.getMaxY() - boundRect.getMinY())/3;
@@ -138,23 +138,55 @@ public abstract class APdfDocument {
 //		cb.moveText(posX, posY);
 		cb.setFontAndSize(bf, (float) c_height);
 		Chunk c = new Chunk(text);
-
+		c.setFont(new Font(bf));
+		
+//		logger.debug("&&&& the text: " + text);
+//		logger.debug("&&&& the chunk text: " + c.getContent());
+//		logger.debug("&&&& rotation: " + angle);
+		
+		String inputString = c.getContent();
+		StringBuilder sb = new StringBuilder(inputString);
+					
+		if(rtl){
+			sb.reverse();
+		}
+		
+		String resultString = sb.toString();
+		
 		AffineTransform transformation=new AffineTransform();
-		final double tx = (boundRect.getMinX()-cutoffLeft+marginLeft)*scaleFactorX;
+		
+		double tx = 0;
+		
+		float scaling_x=(Double.valueOf((boundRect.getMaxX()-1)-boundRect.getMinX())).floatValue()/cb.getEffectiveStringWidth(text, true)*scaleFactorX;
+		float scaling_y=scaleFactorY;	
+		
+		//to set the text right aligned or left aligned
+		if (!rtl){
+			tx = (boundRect.getMinX()-cutoffLeft+marginLeft)*scaleFactorX;
+		}
+		else{
+			tx = ((boundRect.getMaxX()-cutoffLeft+marginLeft)*scaleFactorX - cb.getEffectiveStringWidth(resultString, true));
+//			
+//			logger.debug(" document.getPageSize().getWidth() = " + document.getPageSize().getWidth());
+//			logger.debug(" text = " + resultString);
+//			logger.debug(" cb.getEffectiveStringWidth(text, true) = " + cb.getEffectiveStringWidth(resultString, false));
+//			logger.debug(" (boundRect.getMaxX()-cutoffLeft+marginLeft)*scaleFactorX  = " + (boundRect.getMaxX()-cutoffLeft+marginLeft));
+//			logger.debug(" STRING IS RTL : new tx = " + tx);
+		}
+
 		final double ty = (document.getPageSize().getHeight()) - (baseLineMeanY-cutoffTop+marginTop)*scaleFactorY;
 		transformation.setToTranslation(tx, ty);
 		
-		float scaling_x=(Double.valueOf((boundRect.getMaxX()-1)-boundRect.getMinX())).floatValue()/cb.getEffectiveStringWidth(text, true)*scaleFactorX;
-		float scaling_y=scaleFactorY;			
 		transformation.scale(scaling_x, scaling_y);
 		transformation.rotate(angle*0.0175);
 
-		cb.setTextMatrix(transformation);
-		cb.showText(c.getContent());
+		cb.setTextMatrix(transformation);	
+		cb.showText(resultString);
 		cb.endText();
 	}
 	
 	/**
+	 * @param lineEndX 
 	 * @param boundRect The bounding Rectangle for this string
 	 * @param baseLineMeanY baseLine y-value. May be null! Then this is approximated from the rectangle
 	 * @param text the text content
@@ -166,7 +198,7 @@ public abstract class APdfDocument {
 	 * @throws IOException 
 	 * @throws DocumentException 
 	 */
-	protected void addUniformString(double c_height, float posX, float posY, final Phrase textPhrase, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
+	protected void addUniformString(double c_height, float posX, float posY, float lineEndX, final Phrase textPhrase, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation, boolean rtl) throws IOException, DocumentException {
 
 		/*
 		 * states that text gets read right to left
@@ -239,11 +271,14 @@ public abstract class APdfDocument {
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
 			}
 		}
+		else if (rtl){
+			posX = lineEndX;
+			//logger.debug("rtl - posx = " + posX);
+		}
 
 		AffineTransform transformation=new AffineTransform();
 		currentLineTx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
 		currentLineTy = (document.getPageSize().getHeight()) - posY*scaleFactorY;
-		
 
 		if (color != null){
 			
@@ -305,7 +340,12 @@ public abstract class APdfDocument {
 			//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
 			//cb.showText(c.getContent());
 			//logger.debug("rotate: " + rotation );
-			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, (float) rotation);
+			if (!rtl){
+				ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phraseNew, (float) currentLineTx, (float) currentLineTy, (float) rotation);
+			}
+			else{
+				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phraseNew, (float) currentLineTx, (float) currentLineTy, (float) rotation);
+			}
 
 		}
 
@@ -325,13 +365,15 @@ public abstract class APdfDocument {
 	 * @throws IOException 
 	 * @throws DocumentException 
 	 */
-	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final String expansion, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation) throws IOException, DocumentException {
+	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final String expansion, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation, boolean rtl) throws IOException, DocumentException {
 
-		String tagText = text.concat(expansion);
-		/*
-		 * states that text gets read right to left
-		 */
-		boolean rtl = false;
+		String tagText;
+		if (!rtl)
+			tagText = text.concat(expansion);
+		else{
+			tagText = expansion.concat(text);
+		}
+		
 		currentRotation = rotation;
 		
 		if(c_height <= 0.0 || c_height > 300){
@@ -341,8 +383,6 @@ public abstract class APdfDocument {
 		//logger.debug("text heigth " + c_height);
 		cb.beginText();
 		cb.moveText(posX, posY);
-		
-		
 		cb.setFontAndSize(bf, (float) c_height);
 						
 		float effTextWidth = cb.getEffectiveStringWidth(tagText, false);	
@@ -350,7 +390,6 @@ public abstract class APdfDocument {
 
 		cb.endText();
 		
-
 		cb.setHorizontalScaling(100);
 		if ( effTextWidth > effPrintWidth && rotation == 0){
 			currentPrintWidthScale = effPrintWidth / effTextWidth;
@@ -361,6 +400,9 @@ public abstract class APdfDocument {
 		currentPrintWidth = effTextWidth*currentPrintWidthScale;
 
 		Chunk c = new Chunk(tagText);
+		//otherwise the e.g. hebrew chars are not shown
+		c.setFont(new Font(bf));
+		
 		
 		/*
 		 *       document.open();
@@ -380,28 +422,22 @@ public abstract class APdfDocument {
 		
 		
 		Phrase phrase;
-		
-		//logger.debug("rotation " + rotation);
-		if (Math.abs(rotation) > 1.5){
-			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
-				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
-			}
-		}
 
 		AffineTransform transformation=new AffineTransform();
 		currentLineTx = (posX-cutoffLeft+marginLeft)*scaleFactorX;
 		currentLineTy = (document.getPageSize().getHeight()) - posY*scaleFactorY;
 		
-		//for right to left writing
-		if(rtl){
-			//evt. genauere Position der Textregion ermitteln
-			if ((posX+effTextWidth) > (twelfth*11*scaleFactorX)){
-				
-			}
-			currentLineTx = (document.getPageSize().getWidth() - (twelfth*scaleFactorX));
-		}
-		
-
+		/*
+		 * would be used if the tag list should be right aligned
+		 * for the moment also arabic, hebrew .. tags are on the left
+		 */
+//		if(rtl){
+//			//evt. genauere Position der Textregion ermitteln
+//			if ((posX+effTextWidth) > (twelfth*11*scaleFactorX)){
+//				
+//			}
+//			currentLineTx = (document.getPageSize().getWidth() - (twelfth*scaleFactorX));
+//		}
 
 		if (color != null){
 			
@@ -412,8 +448,7 @@ public abstract class APdfDocument {
 //			float endY = (float) ty;
 //			
 //			drawColorLine(cb, color, startX, startY, endX, endY);
-			
-			
+
             cb.saveState();
 //            //Set the fill color based on eve/odd
             Color currColor = Color.decode(color);
@@ -444,33 +479,48 @@ public abstract class APdfDocument {
 			
 			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", text), writer));
 			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
-			c.append(", ");
+			//c.append(", ");
 			//c.append(new String(rs.getBytes("given_name"), "UTF-8"));
 		    phrase = new Phrase(c);
+		    
+		    //logger.debug(" phrase text " + phrase.getContent());
 
-		    //logger.debug("Resource Path: " + RESOURCE.getPath());
+		    //logger.debug(" phrase text " + phrase.getContent());
 
 		    InputStream is = this.getClass().getClassLoader().getResourceAsStream("js/findTagname.js");
 		    String jsString = fromStream(is);
 		    
 		    //writer.addJavaScript(Utilities.readFileToString(javaScriptFile));
-		        // Add this Chunk to every page
+		   // Add this Chunk to every page
 		    writer.addJavaScript(jsString);
+		    		    
+//		    ColumnText column = new ColumnText(cb);         
+//		    column.setSimpleColumn((float) currentLineTx, (float) currentLineTy, (float) (currentLineTx+currentPrintWidth*scaleFactorX), (float) (currentLineTy+c_height*scaleFactorY));                       
+//		    column.setRunDirection(PdfWriter.RUN_DIRECTION_RTL);   
+//		    column.setText(phrase);
+//		    column.go();
+		    
 		    ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0);
    
 		}
 		else{
-			phrase = new Phrase(c);
-			if (rtl){
-				
-				ColumnText.showTextAligned(cb, Element.ALIGN_RIGHT, phrase, (float) currentLineTx, (float) currentLineTy, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
-			}
-			else{
-				
-				//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
-				ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, (float) rotation);
-				//cb.showText(c.getContent());
-			}
+			phrase = new Phrase();
+			phrase.add(c);
+
+			//logger.debug(" phrase text " + phrase.getContent());
+			
+			
+			
+//			    ColumnText column = new ColumnText(cb);         
+//			    column.setSimpleColumn((float) currentLineTx, (float) currentLineTy, currentPrintWidth*scaleFactorX, (float) c_height*scaleFactorY);                       
+//			    column.setRunDirection(PdfWriter.RUN_DIRECTION_DEFAULT);   
+//			    column.setText(phrase);
+//			    column.go();
+			//cb.showTextAligned();(Element.ALIGN_LEFT, c.getContent(), (float) tx, (float) ty, rotation);
+			ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0);
+			//ColumnText.showTextAligned(cb, Element.ALIGN_LEFT, phrase, (float) currentLineTx, (float) currentLineTy, 0, PdfWriter.RUN_DIRECTION_RTL, 0);
+			//cb.showText(c.getContent());
+			
 
 		}
 
