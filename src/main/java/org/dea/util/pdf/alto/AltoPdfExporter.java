@@ -35,8 +35,8 @@ import com.sun.media.jai.codec.TIFFDecodeParam;
 public class AltoPdfExporter {
 	private static final Logger logger = LoggerFactory.getLogger(AltoPdfExporter.class);
 	private static final String ALTO_DIR = "alto";
-	private static final String IMG_DIR = "OCRmaster";
-	private static final String PDF_DIR = "pdf";
+	private static final String IMG_DIR = "JPG";
+	private static final String PDF_DIR = "PDF";
 	private static final float JPEG_QUALITY = 0.9f;
 	
 	static int totalPdfs = 0;

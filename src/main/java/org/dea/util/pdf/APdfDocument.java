@@ -265,7 +265,7 @@ public abstract class APdfDocument {
 
 		Chunk c = new Chunk(textPhrase.getContent());
 				
-		logger.debug("rotation " + rotation);
+		//logger.debug("rotation " + rotation);
 		if (Math.abs(rotation) > 1.5){
 			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
@@ -365,11 +365,12 @@ public abstract class APdfDocument {
 	 * @throws IOException 
 	 * @throws DocumentException 
 	 */
-	protected void addUniformTagList(double c_height, float posX, float posY, final String text, final String expansion, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation, boolean rtl) throws IOException, DocumentException {
+	protected void addUniformTagList(double c_height, float posX, float posY, final String searchtext, final String text, final String expansion, final PdfContentByte cb, int cutoffLeft, int cutoffTop, BaseFont bf, float twelfth, boolean searchAction, String color, double rotation, boolean rtl) throws IOException, DocumentException {
 
-		String tagText;
-		if (!rtl)
+		String tagText = "";
+		if (!rtl){
 			tagText = text.concat(expansion);
+		}
 		else{
 			tagText = expansion.concat(text);
 		}
@@ -393,7 +394,6 @@ public abstract class APdfDocument {
 		cb.setHorizontalScaling(100);
 		if ( effTextWidth > effPrintWidth && rotation == 0){
 			currentPrintWidthScale = effPrintWidth / effTextWidth;
-			cb.setHorizontalScaling(currentPrintWidthScale*100);
 			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
 		}	
 		
@@ -402,6 +402,7 @@ public abstract class APdfDocument {
 		Chunk c = new Chunk(tagText);
 		//otherwise the e.g. hebrew chars are not shown
 		c.setFont(new Font(bf));
+		c.setHorizontalScaling(currentPrintWidthScale);
 		
 		
 		/*
@@ -477,7 +478,7 @@ public abstract class APdfDocument {
 		if (searchAction && c != null){
 			//logger.debug("find tagname: " + text);
 			
-			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", text), writer));
+			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", searchtext), writer));
 			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
 			//c.append(", ");
 			//c.append(new String(rs.getBytes("given_name"), "UTF-8"));
