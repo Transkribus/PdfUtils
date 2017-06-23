@@ -6,9 +6,11 @@ import java.util.ArrayList;
 
 public class PDFPage {
 	public ArrayList<PDFRegion> regions;
+	public int pageIndex;
 
-	public PDFPage(ArrayList<PDFRegion> regions) {
+	public PDFPage(int page, ArrayList<PDFRegion> regions) {
 		this.regions = regions;
+		this.pageIndex = page;
 	}
 
 	public Rectangle getContentRect()

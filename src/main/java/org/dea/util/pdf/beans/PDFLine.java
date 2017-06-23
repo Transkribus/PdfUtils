@@ -25,9 +25,9 @@ public class PDFLine {
 	{
 		String res = "";
 		for (PDFString actString : strings) {
-			res+=actString.value;
+			res+=actString.value + " ";
 		}
-		return res;
+		return res.trim();
 	}
 
 
