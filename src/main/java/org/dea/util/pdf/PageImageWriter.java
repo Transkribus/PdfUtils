@@ -9,10 +9,14 @@ import javax.imageio.ImageIO;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import com.itextpdf.text.DocumentException;
 
 public class PageImageWriter {
+	private final static Logger logger = LoggerFactory.getLogger(PageImageWriter.class);	
+	
 	protected String extractDir;
 	
 	/**
@@ -62,7 +66,7 @@ public class PageImageWriter {
         	BufferedImage bim = renderer.renderImageWithDPI(i, 300);
         	ImageIO.write(bim, "png", new File(String.format(out, i+1, "png")));
         	
-        	System.out.println("DEBUG -- "+getClass().getName()+ " on page "+ (i+1));
+        	logger.debug("DEBUG -- "+getClass().getName()+ " on page "+ (i+1));
         }
         document.close();
     	
