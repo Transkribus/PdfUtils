@@ -318,7 +318,7 @@ public abstract class APdfDocument {
 		
 
 		if (searchAction && c != null){
-			logger.debug("find tagname: " + textPhrase.getContent());
+			//logger.debug("find tagname: " + textPhrase.getContent());
 			
 			c.setAction(PdfAction.javaScript(String.format("findTagname('%s');", textPhrase.getContent()), writer));
 			//c.setAction(PdfAction.javaScript("app.alert('Think before you print');", writer));
