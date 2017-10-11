@@ -15,7 +15,7 @@ import org.slf4j.LoggerFactory;
 import com.itextpdf.text.DocumentException;
 
 public class PageImageWriter {
-	private final static Logger logger = LoggerFactory.getLogger(PageImageWriter.class);	
+	private static final Logger logger = LoggerFactory.getLogger(PageImageWriter.class);
 	
 	protected String extractDir;
 	
@@ -52,10 +52,12 @@ public class PageImageWriter {
     	PDFRenderer renderer = new PDFRenderer(document);
     	// create output folder/filename(s)
         File dir = new File(outDir + File.separator + name);
-        dir.mkdir();
+        if(!dir.mkdirs()) {
+        	throw new IOException("The output directory could not be created. Please choose a writeable path.");
+        }
         
         // set extract directory name
-        extractDir = dir.getPath();
+        extractDir = dir.getAbsolutePath();
         
         final String out = extractDir + File.separator 
         		+ name + "-%s.%s";
@@ -64,9 +66,11 @@ public class PageImageWriter {
         
         for (int i = 0; i < document.getNumberOfPages(); i++) {
         	BufferedImage bim = renderer.renderImageWithDPI(i, 300);
-        	ImageIO.write(bim, "png", new File(String.format(out, i+1, "png")));
+        	final String fileName = String.format(out, i+1, "png");
+        	logger.debug("Writing page " + i + " to: " + fileName);
+        	ImageIO.write(bim, "png", new File(fileName));
         	
-        	logger.debug("DEBUG -- "+getClass().getName()+ " on page "+ (i+1));
+        	logger.debug(getClass().getName()+ " on page "+ (i+1));
         }
         document.close();
     	
