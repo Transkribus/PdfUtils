@@ -15,7 +15,6 @@ import org.slf4j.LoggerFactory;
 import com.itextpdf.text.DocumentException;
 
 public class PageImageWriter {
-	
 	private static final Logger logger = LoggerFactory.getLogger(PageImageWriter.class);
 	
 	protected String extractDir;
