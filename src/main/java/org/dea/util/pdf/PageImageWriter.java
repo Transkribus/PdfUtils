@@ -7,6 +7,7 @@ import java.io.IOException;
 import javax.imageio.ImageIO;
 
 import org.apache.commons.io.FilenameUtils;
+import org.apache.pdfbox.io.MemoryUsageSetting;
 import org.apache.pdfbox.pdmodel.PDDocument;
 import org.apache.pdfbox.rendering.PDFRenderer;
 import org.slf4j.Logger;
@@ -47,12 +48,14 @@ public class PageImageWriter {
     	File file = new File(filepath);
     	final String name = FilenameUtils.getBaseName(file.getName());
 
-    	// create file reader for input pdf
-    	PDDocument document = PDDocument.load(file);
+    	// create file reader for input pdf and make sure to use only half of the available free memory
+    	PDDocument document = PDDocument.load(file, MemoryUsageSetting.setupMixed(Runtime.getRuntime().freeMemory() /2));
     	PDFRenderer renderer = new PDFRenderer(document);
     	// create output folder/filename(s)
         File dir = new File(outDir + File.separator + name);
-        if(!dir.mkdirs()) {
+        dir.mkdirs();  
+        
+        if (!dir.exists()){
         	throw new IOException("The output directory could not be created. Please choose a writeable path.");
         }
         
@@ -85,11 +88,17 @@ public class PageImageWriter {
      */
     public static void main(String[] args) throws IOException, DocumentException {
 
-     	String outDir = System.getProperty("java.io.tmpdir") + File.separator + "pdftest" + File.separator;
-     	new File(outDir).mkdirs();
-//    	String test = outDir + "ND3370_Wurster_Tafelwerk_0004_Scans.pdf";
-    	String test = "/mnt/dea_scratch/tmp_philip/TranskribusTermsOfUse_v04-2016.pdf";
-    	System.out.println("Writing to " + outDir);
+     	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
+     	File file = new File(outDir);
+     	file.mkdirs();
+     	if (!file.exists())
+     		System.err.println("Could not create directory "+outDir+" -- already exists? "+ file.exists());
+     	String userdir = System.getProperty("user.dir");
+    	String test = userdir+File.separator+"resources"+File.separator+"HTR_Bentham_Box_35.pdf";
+    	if (!new File(test).exists())
+    		System.err.println("Could not find test document");
+//    	String test = "/mnt/dea_scratch/tmp_philip/TranskribusTermsOfUse_v04-2016.pdf";
+    	System.out.println("Writing contents of "+test+ " to " + outDir);
     	new PageImageWriter().extractImages(test, outDir);
     }
 }
