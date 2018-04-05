@@ -35,7 +35,13 @@
 		</site>
 	</distributionManagement>
 	<dependencies>
-	    		<!-- FOR LOGGING:  -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.11</version>
+		</dependency>
+	    
+	    <!-- FOR LOGGING:  -->
 		<dependency>
 			<groupId>org.slf4j</groupId>
 			<artifactId>slf4j-api</artifactId>
