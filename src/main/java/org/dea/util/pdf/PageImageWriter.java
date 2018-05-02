@@ -79,26 +79,6 @@ public class PageImageWriter {
     	
         return dir.getAbsolutePath();
     }
-    
-    /**
-     * Main method.
-     * @param    args    no arguments needed
-     * @throws DocumentException 
-     * @throws IOException
-     */
-    public static void main(String[] args) throws IOException, DocumentException {
+ 
 
-     	String outDir = System.getProperty("java.io.tmpdir") + "pdftest" + File.separator;
-     	File file = new File(outDir);
-     	file.mkdirs();
-     	if (!file.exists())
-     		System.err.println("Could not create directory "+outDir+" -- already exists? "+ file.exists());
-     	String userdir = System.getProperty("user.dir");
-    	String test = userdir+File.separator+"resources"+File.separator+"HTR_Bentham_Box_35.pdf";
-    	if (!new File(test).exists())
-    		System.err.println("Could not find test document");
-//    	String test = "/mnt/dea_scratch/tmp_philip/TranskribusTermsOfUse_v04-2016.pdf";
-    	System.out.println("Writing contents of "+test+ " to " + outDir);
-    	new PageImageWriter().extractImages(test, outDir);
-    }
 }
