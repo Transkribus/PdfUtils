@@ -6,7 +6,7 @@
 © 2013 the DEA</description>
 	<groupId>org.dea.util</groupId>
 	<artifactId>PdfUtils</artifactId>
-	<version>0.0.1</version>
+	<version>0.0.2</version>
 	<!-- <packaging>jar</packaging> -->
 	<organization>
 		<name>DEA</name>
@@ -110,6 +110,11 @@
 			<groupId>com.sun.media</groupId>
 			<artifactId>jai_imageio</artifactId>
 			<version>1.1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.pdfbox</groupId>
+			<artifactId>jbig2-imageio</artifactId>
+			<version>3.0.0</version>
 		</dependency>
 	</dependencies>
 	<build>
