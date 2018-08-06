@@ -1,11 +1,16 @@
 package org.dea.util.pdf.alto;
 
+import java.awt.image.BufferedImage;
 import java.awt.image.RenderedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileFilter;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.FilenameFilter;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.file.DirectoryIteratorException;
 import java.nio.file.Files;
 import java.nio.file.LinkOption;
@@ -15,6 +20,12 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.LinkedList;
 import java.util.List;
+
+import javax.imageio.IIOImage;
+import javax.imageio.ImageIO;
+import javax.imageio.ImageWriteParam;
+import javax.imageio.ImageWriter;
+import javax.imageio.stream.ImageOutputStream;
 
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.io.FilenameUtils;
@@ -35,9 +46,10 @@ import com.sun.media.jai.codec.TIFFDecodeParam;
 public class AltoPdfExporter {
 	private static final Logger logger = LoggerFactory.getLogger(AltoPdfExporter.class);
 	private static final String ALTO_DIR = "alto";
-	private static final String IMG_DIR = "JPG";
+	private static final String IMG_DIR = "OCRmaster";
 	private static final String PDF_DIR = "PDF";
 	private static final float JPEG_QUALITY = 0.9f;
+	private static final float JPEG_QUALITY_IF_JPG = 0.4f;
 	
 	static int totalPdfs = 0;
 		
@@ -49,7 +61,7 @@ public class AltoPdfExporter {
 		}
 		final String path;
 		boolean createSinglePagePdfs = false;
-		boolean doCompressTif = false;
+		boolean doCompressTifOrJpg = false;
 		path = args[args.length-1];
 		
 		for(int i = 0; i < args.length-1; i++){
@@ -58,7 +70,7 @@ public class AltoPdfExporter {
 				createSinglePagePdfs = true;
 				break;
 			case "-j":
-				doCompressTif = true;
+				doCompressTifOrJpg = true;
 				break;
 			default:
 				usage();
@@ -75,7 +87,7 @@ public class AltoPdfExporter {
 		
 		logger.info("Searching documents in: " + dir.getAbsolutePath());
 		logger.info("Single page PDF creation is " + (createSinglePagePdfs?"active":"inactive"));
-		logger.info("TIF to JPEG compression is " + (doCompressTif?"active":"inactive"));
+		logger.info("TIF/JPG to JPEG compression is " + (doCompressTifOrJpg?"active":"inactive"));
 		
 		List<File> docDirs = new LinkedList<>();
 		addDocDirs(dir, docDirs);
@@ -104,7 +116,7 @@ public class AltoPdfExporter {
 //			}
 //			else{
 				try {
-					createPdf(d, out, createSinglePagePdfs, doCompressTif);
+					createPdf(d, out, createSinglePagePdfs, doCompressTifOrJpg);
 					logger.info(countDirs + " collection PDFs created.");
 					totalPdfs++;
 				} catch (Exception e) {
@@ -138,7 +150,7 @@ public class AltoPdfExporter {
 		createPdf(files, out, createSinglePagePdfs, doCompressTif);
 	}
 
-	public static void createPdf(List<Pair<File, File>> files, File out, boolean createSinglePagePdfs, boolean doCompressTif) throws DocumentException, IOException {
+	public static void createPdf(List<Pair<File, File>> files, File out, boolean createSinglePagePdfs, boolean doCompressTifOrJpg) throws DocumentException, IOException {
 		String pdfDir = null;
 		if(createSinglePagePdfs){
 			pdfDir = out.getParent() + File.separator + PDF_DIR;
@@ -152,12 +164,17 @@ public class AltoPdfExporter {
 			File imgFile = e.getLeft();
 			File tmp = null;
 			final String imgName = imgFile.getName();
-			if(isTif(imgName) && doCompressTif){
+			if(isTif(imgName) && doCompressTifOrJpg){
 				tmp = new File(imgFile.getParent() + File.separator 
 						+ FilenameUtils.getBaseName(imgFile.getName()) + "_tmp.jpeg");
 				TiffToJpg(imgFile, tmp, JPEG_QUALITY);
 				img = Image.getInstance(tmp.getAbsolutePath());				
-			} else {			
+			} else if(isJPG(imgName) && doCompressTifOrJpg){
+				tmp = new File(imgFile.getParent() + File.separator 
+						+ FilenameUtils.getBaseName(imgFile.getName()) + "_tmp.jpeg");
+				JpgToJpg(imgFile, tmp, JPEG_QUALITY_IF_JPG);
+				img = Image.getInstance(tmp.getAbsolutePath());				
+			}else {			
 				img = Image.getInstance(imgFile.getAbsolutePath());
 			}
 			
@@ -192,6 +209,11 @@ public class AltoPdfExporter {
 	private static boolean isTif(String imgName) {
 		return imgName.endsWith("tiff") || imgName.endsWith("tif")
 				|| imgName.endsWith("TIFF") || imgName.endsWith("TIF");
+	}
+	
+	private static boolean isJPG(String imgName) {
+		return imgName.endsWith("jpg") || imgName.endsWith("jpeg")
+				|| imgName.endsWith("JPG") || imgName.endsWith("JPEG");
 	}
 
 	public static void createPdf(Image img, File alto, File singlePdfOut) throws IOException, DocumentException {
@@ -244,20 +266,76 @@ public class AltoPdfExporter {
 	
 
 	public static File TiffToJpg(File tiffFile, File out, final float quality) throws IOException {
-		    SeekableStream s = new FileSeekableStream(tiffFile);
-		    TIFFDecodeParam param = null;
-		    ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
-		    RenderedImage op = dec.decodeAsRenderedImage(0);
-		    FileOutputStream fos = new FileOutputStream(out);
-		    
-		    JPEGEncodeParam params = new JPEGEncodeParam();
-		    params.setQuality(quality);
-		    
-			ImageEncoder encoder = ImageCodec.createImageEncoder("jpeg", fos,
-					params);
-			encoder.encode(op);
-		    
-		    fos.close();
-		    return out;
-		  }
+	    SeekableStream s = new FileSeekableStream(tiffFile);
+	    TIFFDecodeParam param = null;
+	    ImageDecoder dec = ImageCodec.createImageDecoder("tiff", s, param);
+	    RenderedImage op = dec.decodeAsRenderedImage(0);
+	    FileOutputStream fos = new FileOutputStream(out);
+	    
+	    JPEGEncodeParam params = new JPEGEncodeParam();
+	    params.setQuality(quality);
+	    
+		ImageEncoder encoder = ImageCodec.createImageEncoder("jpeg", fos,
+				params);
+		encoder.encode(op);
+	    
+	    fos.close();
+	    return out;
+	}
+	
+	public static File JpgToJpg(File tiffFile, File out, final float quality) throws IOException {
+	    SeekableStream s = new FileSeekableStream(tiffFile);
+	    TIFFDecodeParam param = null;
+	    ImageDecoder dec = ImageCodec.createImageDecoder("jpeg", s, param);
+	    RenderedImage op = dec.decodeAsRenderedImage(0);
+	    FileOutputStream fos = new FileOutputStream(out);
+	    
+	    JPEGEncodeParam params = new JPEGEncodeParam();
+	    params.setQuality(quality);
+	    
+		ImageEncoder encoder = ImageCodec.createImageEncoder("jpeg", fos,
+				params);
+		encoder.encode(op);
+	    
+	    fos.close();
+	    return out;
+	}
+	
+	/*
+	 * another possibility to compress jpg when input is also jpg
+	 */
+	public static File compressJpg(File jpgFile, File out){
+		InputStream inputStream;
+        try {
+            inputStream = new FileInputStream(jpgFile);
+            BufferedImage image = ImageIO.read(inputStream);              
+            ImageWriter writer = ImageIO.getImageWritersByFormatName("jpeg").next();      
+            ImageWriteParam param = writer.getDefaultWriteParam();
+            param.setCompressionMode(ImageWriteParam.MODE_EXPLICIT);
+            param.setCompressionQuality(JPEG_QUALITY_IF_JPG);      
+           
+            
+        	ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        	ImageOutputStream ios = ImageIO.createImageOutputStream(bytes);
+        	writer.setOutput(ios);
+
+        	IIOImage iioImage = new IIOImage(image, null, null);
+        	writer.write(null, iioImage, param);
+        	ios.close();
+        	writer.dispose();
+        	
+        	FileOutputStream fos = new FileOutputStream(out);
+        	fos.write(bytes.toByteArray());
+        	return out;
+            
+            
+        } catch (FileNotFoundException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
+        return null;
+	}
 }
