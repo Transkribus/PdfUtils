@@ -179,6 +179,8 @@ public abstract class APdfDocument {
 		transformation.setToTranslation(tx, ty);
 		transformation.scale(scaling_x, scaling_y);
 		transformation.rotate(angle*0.0175);
+		
+		logger.debug("text " + resultString);
 
 		cb.setTextMatrix(transformation);	
 		cb.showText(resultString);
@@ -233,8 +235,8 @@ public abstract class APdfDocument {
 //		logger.debug("currTextRegionRect.getMaxX() "+ currTextRegionRect.getMaxX());
 						
 		float effTextWidth = cb.getEffectiveStringWidth(textPhrase.getContent(), true);	
-		float effTextRegionWidth = ((float) currTextRegionRect.getWidth() - 40) - (float) (posX-currTextRegionRect.getMinX());
-		float effPrintWidth = (document.getPageSize().getWidth()/scaleFactorX - twelfth/2) - posX;
+		float effTextRegionWidth = (Math.abs(rotation) == 90) ? ((float) currTextRegionRect.getHeight() - 40) - (float) (currTextRegionRect.getMinY()) : ((float) currTextRegionRect.getWidth() - 40) - (float) (posX-currTextRegionRect.getMinX());
+		float effPrintWidth = (Math.abs(rotation) == 90) ? (document.getPageSize().getHeight()/scaleFactorY - twelfth/2) - posY : (document.getPageSize().getWidth()/scaleFactorX - twelfth/2) - posX;
 		
 //		logger.debug("effTextRegionWidth: " + effTextRegionWidth);
 //		logger.debug("effTextWidth " + effTextWidth);
@@ -251,12 +253,14 @@ public abstract class APdfDocument {
 //		logger.debug("rotation " + rotation);
 //		logger.debug("effPrintWidth " + effPrintWidth);
 		
-		if (effTextWidth > effTextRegionWidth && rotation == 0){
+		//if (effTextWidth > effTextRegionWidth && rotation == 0){
+		if (effTextWidth > effTextRegionWidth){
 			currentPrintWidthScale = Math.abs(effTextRegionWidth / effTextWidth);
 			logger.debug("width exceeds region width: scale with " + currentPrintWidthScale*100);
 		}
 		
-		else if ( effTextWidth > effPrintWidth && rotation == 0){
+		//else if ( effTextWidth > effPrintWidth && rotation == 0){
+		else if ( effTextWidth > effPrintWidth){
 			currentPrintWidthScale = Math.abs(effPrintWidth / effTextWidth);
 			//cb.setHorizontalScaling(currentPrintWidthScale*100);
 			logger.debug("width exceeds page width: scale with " + currentPrintWidthScale*100);
@@ -283,7 +287,8 @@ public abstract class APdfDocument {
 
 		Chunk c = new Chunk(textPhrase.getContent());
 				
-		//logger.debug("rotation " + rotation);
+//		logger.debug("text to rotate?  " + textPhrase.getContent());
+//		logger.debug("rotation  " + rotation);
 		if (Math.abs(rotation) > 1.5){
 			if ((document.getPageSize().getWidth()/scaleFactorX - twelfth) < posX){
 				posX = (float) ((document.getPageSize().getWidth()/scaleFactorX - twelfth)-c_height);
