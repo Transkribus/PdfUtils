@@ -3,6 +3,7 @@ package org.dea.util.pdf;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.util.Observable;
 
 import javax.imageio.ImageIO;
 
@@ -15,7 +16,7 @@ import org.slf4j.LoggerFactory;
 
 import com.itextpdf.text.DocumentException;
 
-public class PageImageWriter {
+public class PageImageWriter extends Observable {
 	private static final Logger logger = LoggerFactory.getLogger(PageImageWriter.class);
 	
 	protected String extractDir;
@@ -52,11 +53,10 @@ public class PageImageWriter {
     	PDDocument document = PDDocument.load(file, MemoryUsageSetting.setupMixed(Runtime.getRuntime().freeMemory() /2));
     	PDFRenderer renderer = new PDFRenderer(document);
     	// create output folder/filename(s)
-        File dir = new File(outDir + File.separator + name);
-        dir.mkdirs();  
+        File dir = new File(outDir, name);   
         
-        if (!dir.exists()){
-        	throw new IOException("The output directory could not be created. Please choose a writeable path.");
+        if (!dir.exists() && !dir.mkdirs()){
+        	throw new IOException("The output directory could not be created at " + dir.getAbsolutePath() + " - Please choose a writeable path.");
         }
         
         // set extract directory name
@@ -68,6 +68,8 @@ public class PageImageWriter {
         // prepare parsing objects
         
         for (int i = 0; i < document.getNumberOfPages(); i++) {
+        	setChanged();
+        	notifyObservers("Extracting image for page " + (i+1) + " from PDF");
         	BufferedImage bim = renderer.renderImageWithDPI(i, 300);
         	final String fileName = String.format(out, i+1, "png");
         	logger.debug("Writing page " + i + " to: " + fileName);
