@@ -272,7 +272,17 @@ public abstract class APdfDocument {
 			Chunk tmpChunk = new Chunk(ch.getContent());
 			//tmpChunk.setLineHeight((float) c_height*scaleFactorY);
 			tmpChunk.setAttributes(ch.getAttributes());
-			tmpChunk.setFont(new Font(ch.getFont().getBaseFont(), (float) c_height*scaleFactorY));
+			
+			if (ch.getFont().getSize()>0){
+				logger.debug("size of font " + ch.getFont().getSize());
+				tmpChunk.setFont(new Font(ch.getFont().getBaseFont(), (float) ch.getFont().getSize()));
+			}
+			else{
+				//logger.debug("no size of font " + tmpChunk.getFont().getSize());
+				tmpChunk.setFont(new Font(ch.getFont().getBaseFont(), (float) c_height*scaleFactorY));
+			}
+			
+			
 			tmpChunk.setHorizontalScaling(currentPrintWidthScale);
 			phraseNew.add(tmpChunk);
 		}
