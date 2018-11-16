@@ -13,7 +13,7 @@
       <pattern>%d{HH:mm:ss.SSS} %5p | [%c{1}] %m%n</pattern>
     </encoder>
   </appender>
-  <logger name="org.apache" level="INFO">
+  <logger name="org.apache" additivity="false" level="INFO">
     <appender-ref ref="Main"/>
   </logger>
   <root level="DEBUG">

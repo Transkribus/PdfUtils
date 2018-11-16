@@ -5,20 +5,18 @@ import java.io.FilenameFilter;
 import java.io.IOException;
 
 import org.apache.commons.io.FileUtils;
-import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 public class ExtractImagesTest {
 	private static final Logger logger = LoggerFactory.getLogger(ExtractImagesTest.class);
 	
-    public File[] finder( String dirName){
+    public File[] finder(String dirName){
         File dir = new File(dirName);
 
         return dir.listFiles(new FilenameFilter() {
 			@Override
 			public boolean accept(File dir, String name) {
-				// TODO Auto-generated method stub
 				return name.endsWith(".pdf");
 			}
 		});
@@ -33,8 +31,7 @@ public class ExtractImagesTest {
 				logger.info("Found "+file.getAbsolutePath());
 				extractImagesTest(file.getAbsolutePath(), System.getProperty("java.io.tmpdir"), true);
 			} catch (SecurityException | IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				logger.error(e.getMessage(), e);
 			}
 		}
 	}
@@ -61,8 +58,11 @@ public class ExtractImagesTest {
 	
 //	@Test
 	public void extractImagesTest() throws SecurityException, IOException {
-		
-		extractImagesTest("/mnt/dea_scratch/TRP/bugs/large_pdf_oom/Beinecke_DL_Voynich Manuscript.pdf","/tmp/pdf/", false);
+		try {
+			extractImagesTest("/mnt/dea_scratch/TRP/bugs/large_pdf_oom/Beinecke_DL_Voynich Manuscript.pdf","/tmp/pdf/", false);
+		} catch (Exception e) {
+			logger.error(e.getMessage(), e);
+		}
 	}
 	
 	public static void main(String [] args) {
