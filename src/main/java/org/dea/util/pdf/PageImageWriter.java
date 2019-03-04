@@ -63,7 +63,7 @@ public class PageImageWriter extends Observable {
         extractDir = dir.getAbsolutePath();
         
         final String out = extractDir + File.separator 
-        		+ name + "-%s.%s";
+        		+ name + "-%04d.%s";
 
         // prepare parsing objects
         
