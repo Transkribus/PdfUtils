@@ -24,17 +24,28 @@ public class ExtractImagesTest2 {
 
     }
 	
-	public void extractAllPdfs(String basePath) {
+	public void extractAllPdfs(String basePath, boolean extractImages) {
 		File[] files = finder(basePath);
-		
-		
-		
+
 		for (File file : files) {
 			try {
 				File destPath = new File(basePath + File.separator + FilenameUtils.getBaseName(file.getName()));
+				if (destPath.exists()){
+					logger.info("this dir already exists "+destPath.getAbsolutePath());
+					//System.in.read();				
+					continue;
+				}
 				destPath.mkdirs();
 				logger.info("Found "+file.getAbsolutePath());
-				extractImagesTest(file.getAbsolutePath(), basePath, true);
+				if (extractImages){
+					extractImagesTest(file.getAbsolutePath(), basePath, true);
+					//System.in.read();
+				}
+				else{
+					extractText(file.getAbsolutePath(), basePath);
+					//System.in.read();
+				}
+				
 			} catch (SecurityException | IOException e) {
 				logger.error(e.getMessage(), e);
 			}
@@ -61,6 +72,11 @@ public class ExtractImagesTest2 {
 		
 	}
 	
+	public void extractText(String pdfPath, String tmpDirPath) throws SecurityException, IOException{		
+		PageImageWriter imgWriter = new PageImageWriter();
+		imgWriter.extractText(pdfPath, tmpDirPath);		
+	}
+	
 //	@Test
 	public void extractImagesTest() throws SecurityException, IOException {
 		try {
@@ -84,8 +100,15 @@ public class ExtractImagesTest2 {
 
 //		test.extractAllPdfs("C:\\Projekte\\Daten_Transkribus_Table_Collection\\datasets\\BELGRADE\\tabele\\vojna geografija");
 		
-		//test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Input_Test");
+//		System.setProperty("sun.java2d.cmm", "sun.java2d.cmm.kcms.KcmsServiceProvider");
+//		test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Input", true);
 		
-		test.extractAllPdfs("Y:/HTR/für_Digitexx/Dialektarchiv/PDFs_Test");
+		//extract the text
+		//test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Transkripte", false);
+		
+		test.extractAllPdfs("Y:/HTR/Mertelseder", true);
+
+
+		//test.extractAllPdfs("Y:/HTR/für_Digitexx/Dialektarchiv/PDFs");
 	}
 }
