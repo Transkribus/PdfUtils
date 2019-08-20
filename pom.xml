@@ -6,7 +6,7 @@
 © 2013 the DEA</description>
 	<groupId>org.dea.util</groupId>
 	<artifactId>PdfUtils</artifactId>
-	<version>0.0.4-SNAPSHOT</version>
+	<version>0.0.4</version>
 	<!-- <packaging>jar</packaging> -->
 	<organization>
 		<name>DEA</name>
