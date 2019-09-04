@@ -61,6 +61,7 @@ public class AltoPdfExporter {
 		}
 		final String path;
 		boolean createSinglePagePdfs = false;
+		boolean createCollectionPdfs = false;
 		boolean doCompressTifOrJpg = false;
 		path = args[args.length-1];
 		
@@ -68,6 +69,9 @@ public class AltoPdfExporter {
 			switch(args[i]){
 			case "-s":
 				createSinglePagePdfs = true;
+				break;
+			case "-c":
+				createCollectionPdfs = true;
 				break;
 			case "-j":
 				doCompressTifOrJpg = true;
@@ -116,7 +120,7 @@ public class AltoPdfExporter {
 //			}
 //			else{
 				try {
-					createPdf(d, out, createSinglePagePdfs, doCompressTifOrJpg);
+					createPdf(d, out, createSinglePagePdfs, createCollectionPdfs, doCompressTifOrJpg);
 					logger.info(countDirs + " collection PDFs created.");
 					totalPdfs++;
 				} catch (Exception e) {
@@ -145,19 +149,23 @@ public class AltoPdfExporter {
 		}
 	}
 
-	public static void createPdf(File dir, File out, boolean createSinglePagePdfs, boolean doCompressTif) throws DocumentException, IOException {
+	public static void createPdf(File dir, File out, boolean createSinglePagePdfs, boolean createCollectionPdfs, boolean doCompressTifOrJpg) throws DocumentException, IOException {
 		List<Pair<File, File>> files = findFiles(dir);
-		createPdf(files, out, createSinglePagePdfs, doCompressTif);
+		createPdf(files, out, createSinglePagePdfs, createCollectionPdfs, doCompressTifOrJpg);
 	}
 
-	public static void createPdf(List<Pair<File, File>> files, File out, boolean createSinglePagePdfs, boolean doCompressTifOrJpg) throws DocumentException, IOException {
+	public static void createPdf(List<Pair<File, File>> files, File out, boolean createSinglePagePdfs, boolean createCollectionPdfs, boolean doCompressTifOrJpg) throws DocumentException, IOException {
 		String pdfDir = null;
 		if(createSinglePagePdfs){
 			pdfDir = out.getParent() + File.separator + PDF_DIR;
 			new File(pdfDir).mkdir();
 		}
 		long start = System.currentTimeMillis();
-		AltoPdfDocument pdf = new AltoPdfDocument(out);
+		
+		AltoPdfDocument pdf = null;
+		if (createCollectionPdfs){
+			pdf = new AltoPdfDocument(out);
+		}
 		for(Pair<File, File> e : files){
 			
 			Image img;
@@ -187,7 +195,9 @@ public class AltoPdfExporter {
 				xmlFile = e.getRight();
 			}
 			
-			pdf.addPage(img, xmlFile, false);
+			if (pdf != null && createCollectionPdfs){
+				pdf.addPage(img, xmlFile, false);
+			}
 			
 			if(createSinglePagePdfs){
 				File singlePdfOut = new File(pdfDir + File.separator + FilenameUtils.getBaseName(imgFile.getName())+".pdf");
@@ -201,7 +211,9 @@ public class AltoPdfExporter {
 		totalPdfs += files.size();
 		logger.info("--- (" + totalPdfs + ") total PDFs created.");
 		
-		pdf.close();
+		if (pdf != null && createCollectionPdfs){
+			pdf.close();
+		}
 		long end = System.currentTimeMillis();
 		logger.info(end-start + " ms");
 	}
@@ -260,7 +272,7 @@ public class AltoPdfExporter {
 	}
 	
 	private static void usage() {
-		System.out.println("Use: java -jar jarFileName [-s] inputDir\n-s\talso create single PDF for each page\n-j\tcompress TIF to JPEG");
+		System.out.println("Use: java -jar jarFileName [-s-j] inputDir\n-s\talso create single PDF for each page\n-j\tcompress TIF to JPEG");
 		return;		
 	}
 	
