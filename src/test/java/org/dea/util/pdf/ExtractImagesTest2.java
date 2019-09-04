@@ -29,7 +29,7 @@ public class ExtractImagesTest2 {
 
 		for (File file : files) {
 			try {
-				File destPath = new File(basePath + File.separator + FilenameUtils.getBaseName(file.getName()));
+				File destPath = new File(basePath + File.separator + FilenameUtils.getBaseName(file.getName()).replace("_transkripsie", "-beelde"));
 				if (destPath.exists()){
 					logger.info("this dir already exists "+destPath.getAbsolutePath());
 					//System.in.read();				
@@ -43,7 +43,8 @@ public class ExtractImagesTest2 {
 				}
 				else{
 					extractText(file.getAbsolutePath(), basePath);
-					//System.in.read();
+					logger.debug("file " + file.getName() + " extracted. Press 'return' for next one.");
+					System.in.read();
 				}
 				
 			} catch (SecurityException | IOException e) {
@@ -104,9 +105,9 @@ public class ExtractImagesTest2 {
 //		test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Input", true);
 		
 		//extract the text
-		//test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Transkripte", false);
+		test.extractAllPdfs("Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/VOC_SA/Transcriptions", false);
 		
-		test.extractAllPdfs("Y:/HTR/Mertelseder", true);
+		//test.extractAllPdfs("Y:/HTR/für_Digitexx/Briefe von Maria Carolina/PDFs", true);
 
 
 		//test.extractAllPdfs("Y:/HTR/für_Digitexx/Dialektarchiv/PDFs");

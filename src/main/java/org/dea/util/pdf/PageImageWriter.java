@@ -94,7 +94,8 @@ public class PageImageWriter extends Observable {
     	
     	// extract file name
     	File file = new File(filePath);
-    	final String name = FilenameUtils.getBaseName(file.getName());
+    	String name = FilenameUtils.getBaseName(file.getName());
+    	name = name.replace("_transkripsie", "-beelde");
     	
         File dir = new File(outDir, name);   
         
@@ -102,7 +103,7 @@ public class PageImageWriter extends Observable {
         	throw new IOException("The output directory could not be created at " + dir.getAbsolutePath() + " - Please choose a writeable path.");
         }
         
-        String imageDirString = "Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/Images/" + name;
+        String imageDirString = "Y:/HTR/für_Digitexx/NAN_2020_(National_Archive_Netherlands)/VOC_SA/Images/" + name;
         File imgDir = new File(imageDirString);
         
         logger.debug("imgDir number of files: " + imgDir.listFiles().length);
@@ -135,8 +136,9 @@ public class PageImageWriter extends Observable {
         
         logger.debug("number of pages in this doc: "+ imgDir.listFiles().length);
 
-        int pageNr = 3;
-        for (int i = 3; i<imgDir.listFiles().length; i++){
+        int pageNr = 0;
+        boolean resetted = false;
+        for (int i = 0; i<(imgDir.listFiles().length); i++){
         	
         	String indexString1 = "p. "+i+" ";
         	String indexString2 = "p. "+(i+1)+" ";
@@ -146,19 +148,23 @@ public class PageImageWriter extends Observable {
         	
         	logger.debug("i is"+ i);
         	
-        	if (i == 18){
-        		i=i+3;
-        		pageNr = pageNr+4;
-        		continue;
-        	}
+//        	if (i == 213 && !resetted){
+//        		i=i+1;
+//        		resetted = true;
+//        		//pageNr = pageNr+4;
+//        		continue;
+//        	}
+//        	
+//        	if (i == 3){
+//                String resultText = getTextForPage(parsedText, null, indexString1);
+//                writeTextFile(out, pageNr, resultText);
+//        	}
         	
-        	if (i == 3){
-                String resultText = getTextForPage(parsedText, null, indexString1);
-                writeTextFile(out, pageNr, resultText);
-        	}
-        	
-        	if ((parsedText.indexOf(indexString1) != -1 || parsedText.indexOf(altIndexString1) != -1) && (parsedText.indexOf(indexString2) != -1 || parsedText.indexOf(altIndexString2) != -1)){
-            	String resultText2 = getTextForPage(parsedText, indexString1, indexString2);
+        	if ((parsedText.indexOf(indexString1) != -1 || parsedText.indexOf(altIndexString1) != -1 || pageNr == 0) && (parsedText.indexOf(indexString2) != -1 || parsedText.indexOf(altIndexString2) != -1)){
+            	if (pageNr == 0){
+            		indexString1 = null;
+            	}
+        		String resultText2 = getTextForPage(parsedText, indexString1, indexString2);
             	pageNr += 1;
             	writeTextFile(out, pageNr, resultText2);
         	}
@@ -183,7 +189,7 @@ public class PageImageWriter extends Observable {
             		
             		logger.debug("index i with troubles: " + i);
             		logger.debug("length of tmp: " + tmp.length);
-            		System.in.read();
+            		
             		
             		if (tmp.length>2){
             			logger.debug("index i with troubles: " + i);
@@ -201,6 +207,7 @@ public class PageImageWriter extends Observable {
             			writeTextFile(out, pageNr, resultText2);
             			i++;
             		}
+            		System.in.read();
             	
      
             	
@@ -231,6 +238,7 @@ public class PageImageWriter extends Observable {
 	private void writeTextFile(String out, int pageNr, String resultText) throws IOException {
     	final String fileName = String.format(out, pageNr, "txt");
         BufferedWriter writer = new BufferedWriter(new FileWriter(fileName));
+        resultText = resultText.replaceAll("\\[(.*?)\\]", "");
         writer.write(resultText);
         //Close writer
         writer.close();
