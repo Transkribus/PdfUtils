@@ -88,6 +88,7 @@ public abstract class APdfDocument {
 			document = new Document();
 			writer = PdfWriter.getInstance(document, new FileOutputStream(this.pdfFile));
 			writer.setPdfVersion(PdfWriter.VERSION_1_7);
+			//writer.setFullCompression();
 			
 			//to yield PDF/A
 			//writer.setPDFXConformance(PdfWriter.PDFX1A2001);
@@ -180,7 +181,7 @@ public abstract class APdfDocument {
 		transformation.scale(scaling_x, scaling_y);
 		transformation.rotate(angle*0.0175);
 		
-		logger.debug("text " + resultString);
+		//logger.debug("text " + resultString);
 
 		cb.setTextMatrix(transformation);	
 		cb.showText(resultString);
